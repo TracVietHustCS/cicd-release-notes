@@ -1,0 +1,12 @@
+{
+  "html_title": "CI/CD và Release notes · Trác Việt",
+  "doc_suffix": "CI/CD notes",
+  "storage": "cicd",
+  "brand_aria": "CI/CD và Release notes",
+  "mk": "ci/cd",
+  "brand_text": ["CI/CD · Release", "notes"],
+  "home_url": "https://tracviethustcs.github.io/",
+  "nav": [["Khái niệm", "#cicd-principles"], ["Pipeline", "#pipeline-anatomy"], ["GitHub Actions", "#gha"], ["Phát hành", "#deploy-strategies"], ["GitOps", "#gitops-cd"], ["Luyện tập", "#quiz-ci"]],
+  "colors": {"acc": "#1a7f4b", "acc_d": "#0f6a3b", "acc_dk": "#58d49a", "onacc_dk": "#06220f", "navbg": "#13261d", "navbg_dk": "#0f1d17", "mark": "#2ea44f", "mark_ink": "#06220f"},
+  "footer": "Ghi chú tự học, tự soạn, không phải tài liệu chính thức của GitHub, GitLab, Jenkins hay bất kỳ nhà cung cấp nào. Cú pháp workflow, tên action, phiên bản công cụ và tính năng thay đổi theo thời gian: hãy đối chiếu tài liệu hiện hành và thử trên repo thử nghiệm trước khi áp dụng vào pipeline thật. Đừng cấp quyền triển khai production cho pipeline mà bạn chưa kiểm soát được."
+}
